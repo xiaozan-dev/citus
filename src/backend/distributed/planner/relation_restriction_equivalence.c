@@ -2056,7 +2056,8 @@ ContextCoversJoinRestriction(JoinRestrictionContext *joinRestrictionContext,
 			joinRestrictionInContext->joinRestrictInfoList;
 		List *joinRestrictInfoListInTest =
 			joinRestrictionInTest->joinRestrictInfoList;
-		if (LeftListIsSubset(joinRestrictInfoListInTest, joinRestrictInfoListInContext))
+		if (list_length(joinRestrictInfoListInTest) != 0 &&
+			LeftListIsSubset(joinRestrictInfoListInTest, joinRestrictInfoListInContext))
 		{
 			return true;
 		}
