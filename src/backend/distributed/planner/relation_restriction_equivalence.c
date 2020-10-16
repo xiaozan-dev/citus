@@ -2056,7 +2056,8 @@ ContextCoversJoinRestriction(JoinRestrictionContext *joinRestrictionContext,
 			joinRestrictionInContext->joinRestrictInfoList;
 		List *joinRestrictInfoListInTest =
 			joinRestrictionInTest->joinRestrictInfoList;
-		if (!(IS_OUTER_JOIN(joinRestrictionInTest->joinType) && list_length(joinRestrictInfoListInTest) == 0) &&
+		bool hasOnlyInnerJoin = CurrentPlannerRestrictionContext()->hasOnlyInnerJoin;
+		if ((hasOnlyInnerJoin || list_length(joinRestrictInfoListInTest) != 0) &&
 			LeftListIsSubset(joinRestrictInfoListInTest, joinRestrictInfoListInContext))
 		{
 			return true;

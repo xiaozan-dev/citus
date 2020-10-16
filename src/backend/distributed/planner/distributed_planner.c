@@ -115,7 +115,6 @@ static void AdjustReadIntermediateResultsCostInternal(RelOptInfo *relOptInfo,
 static List * OuterPlanParamsList(PlannerInfo *root);
 static List * CopyPlanParamList(List *originalPlanParamList);
 static PlannerRestrictionContext * CreateAndPushPlannerRestrictionContext(void);
-static PlannerRestrictionContext * CurrentPlannerRestrictionContext(void);
 static void PopPlannerRestrictionContext(void);
 static void ResetPlannerRestrictionContext(
 	PlannerRestrictionContext *plannerRestrictionContext);
@@ -1746,6 +1745,8 @@ multi_join_restriction_hook(PlannerInfo *root,
 	 */
 	plannerRestrictionContext->hasSemiJoin = plannerRestrictionContext->hasSemiJoin ||
 											 extra->sjinfo->jointype == JOIN_SEMI;
+	plannerRestrictionContext->hasOnlyInnerJoin = plannerRestrictionContext->hasOnlyInnerJoin &&
+											  	  extra->sjinfo->jointype == JOIN_INNER;
 
 	MemoryContextSwitchTo(oldMemoryContext);
 }
@@ -2135,6 +2136,7 @@ CreateAndPushPlannerRestrictionContext(void)
 
 	/* we'll apply logical AND as we add tables */
 	plannerRestrictionContext->relationRestrictionContext->allReferenceTables = true;
+	plannerRestrictionContext->hasOnlyInnerJoin = true;
 
 	plannerRestrictionContextList = lcons(plannerRestrictionContext,
 										  plannerRestrictionContextList);
@@ -2147,7 +2149,7 @@ CreateAndPushPlannerRestrictionContext(void)
  * CurrentRestrictionContext returns the most recently added
  * PlannerRestrictionContext from the plannerRestrictionContextList list.
  */
-static PlannerRestrictionContext *
+PlannerRestrictionContext *
 CurrentPlannerRestrictionContext(void)
 {
 	Assert(plannerRestrictionContextList != NIL);

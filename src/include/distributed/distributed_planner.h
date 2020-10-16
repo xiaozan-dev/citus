@@ -117,6 +117,7 @@ typedef struct PlannerRestrictionContext
 	 */
 	FastPathRestrictionContext *fastPathRestrictionContext;
 	bool hasSemiJoin;
+	bool hasOnlyInnerJoin;
 	MemoryContext memoryContext;
 } PlannerRestrictionContext;
 
@@ -226,6 +227,7 @@ extern bool NeedsDistributedPlanning(Query *query);
 extern struct DistributedPlan * GetDistributedPlan(CustomScan *node);
 extern void multi_relation_restriction_hook(PlannerInfo *root, RelOptInfo *relOptInfo,
 											Index restrictionIndex, RangeTblEntry *rte);
+extern PlannerRestrictionContext * CurrentPlannerRestrictionContext(void);
 extern void multi_join_restriction_hook(PlannerInfo *root,
 										RelOptInfo *joinrel,
 										RelOptInfo *outerrel,
