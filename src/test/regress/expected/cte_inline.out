@@ -186,13 +186,13 @@ FROM top_cte,
 DEBUG:  CTE top_cte is going to be inlined via distributed planning
 DEBUG:  CTE cte_1 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
-WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for CTE top_cte: SELECT key, value, other_value FROM cte_inline.test_table
 WARNING:  list_length before removal: 0
@@ -299,7 +299,7 @@ FROM
 DEBUG:  CTE cte_1 is going to be inlined via distributed planning
 DEBUG:  CTE cte_2 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -1116,7 +1116,7 @@ ORDER BY value, other_value, z, y, t, m, cte_2_key
 LIMIT 5;
 DEBUG:  CTE cte_3 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 8
-WARNING:  list_length after removal: 8
+WARNING:  list_length after removal: 2
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for CTE cte_2: SELECT value, other_value, key FROM cte_inline.test_table
 WARNING:  list_length before removal: 0

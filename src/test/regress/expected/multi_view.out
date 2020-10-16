@@ -154,7 +154,7 @@ SELECT count(distinct o_orderkey) FROM priority_orders join air_shipped_lineitem
 	ON (o_orderkey = l_orderkey)
 	WHERE (o_orderkey = 231);
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
  count 
 -------
      1
@@ -165,7 +165,7 @@ SELECT distinct(o_orderkey) FROM priority_orders join air_shipped_lineitems
 	ON (o_orderkey = l_orderkey)
 	WHERE (o_orderkey = 231);
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
  o_orderkey 
 ------------
         231
@@ -1283,7 +1283,7 @@ WARNING:  list_length after removal: 0
 -- below statement should not update anything. so it should return empty
 UPDATE large SET id=46 FROM small_view WHERE small_view.id=large.id and large.id=15 RETURNING large.id, large.tenant_id;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
  id | tenant_id 
@@ -1620,7 +1620,7 @@ WARNING:  list_length after removal: 0
 -- below statement should not update anything. so it should return empty
 UPDATE large SET id=46 FROM small_view WHERE small_view.id=large.id and large.id=15 RETURNING large.id, large.tenant_id;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
  id | tenant_id 
@@ -1690,28 +1690,40 @@ HINT:  To enable inserting into the view, provide an INSTEAD OF INSERT trigger o
 -- create a reference table only view
 CREATE TABLE ref_1 (key  int, value int);
 SELECT create_reference_table('ref_1');
- create_reference_table
----------------------------------------------------------------------
-
+ create_reference_table 
+------------------------
+ 
 (1 row)
 
 CREATE VIEW  v1 AS SELECT key AS col1, value AS col2 FROM ref_1;
 -- remove rows where values are equal
 INSERT INTO ref_1 VALUES (1,1), (2,2), (3,99);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DELETE  FROM ref_1  WHERE value in (SELECT col1 FROM v1);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 SELECT * FROM ref_1 ORDER BY key, value;
- key | value
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ key | value 
+-----+-------
    3 |    99
 (1 row)
 
 -- add 2 remove 1
 INSERT INTO ref_1 VALUES (1,1), (2,99);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 WITH c1 AS (SELECT col1 FROM v1 ORDER BY col1 LIMIT 1)
 DELETE  FROM ref_1  WHERE value in (SELECT col1 FROM c1);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 SELECT * FROM ref_1 ORDER BY key, value;
- key | value
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ key | value 
+-----+-------
    2 |    99
    3 |    99
 (2 rows)
@@ -1719,25 +1731,47 @@ SELECT * FROM ref_1 ORDER BY key, value;
 -- remove a rows based on id column in small
 WITH c1 AS (SELECT id AS col1 FROM small)
 DELETE  FROM ref_1  WHERE value in (SELECT col1 FROM c1);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT * FROM ref_1 ORDER BY key, value;
- key | value
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ key | value 
+-----+-------
 (0 rows)
 
 INSERT INTO ref_1 VALUES (3,99);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE VIEW v2 AS SELECT id AS col1 FROM small;
 DELETE  FROM ref_1  WHERE value in (SELECT col1 FROM v2);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT * FROM ref_1 ORDER BY key, value;
- key | value
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ key | value 
+-----+-------
 (0 rows)
 
 INSERT INTO ref_1 VALUES (3,99);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE MATERIALIZED VIEW v3 AS SELECT id AS col1 FROM small;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DELETE  FROM ref_1  WHERE value in (SELECT col1 FROM v3);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 SELECT * FROM ref_1 ORDER BY key, value;
- key | value
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ key | value 
+-----+-------
 (0 rows)
 
 DROP TABLE large, small, ref_1 CASCADE;

@@ -980,9 +980,9 @@ SET client_min_messages TO WARNING;
  WHERE  raw_events_second.user_id = raw_events_first.value_1
         AND raw_events_first.value_1 = 12;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
  -- some unsupported LEFT/INNER JOINs
  -- JOIN on one table with partition column other is not
  INSERT INTO agg_events (user_id)
@@ -1013,9 +1013,9 @@ WARNING:  list_length after removal: 1
         raw_events_second
  WHERE  raw_events_first.user_id = raw_events_first.value_1;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 ERROR:  cannot perform distributed planning on this query
 DETAIL:  Cartesian products are currently unsupported
  -- both tables joined on non-partition columns
@@ -1098,15 +1098,15 @@ ERROR:  complex joins are only supported when all distributed tables are co-loca
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
               coordinator_plan
 ---------------------------------------------------------------------
@@ -2000,15 +2000,15 @@ JOIN LATERAL
 $Q$);
 WARNING:  list_length before removal: 44
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 14
+WARNING:  list_length after removal: 6
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 44
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 14
+WARNING:  list_length after removal: 6
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 44
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 14
+WARNING:  list_length after removal: 6
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
               coordinator_plan
 ---------------------------------------------------------------------
@@ -2158,23 +2158,23 @@ WHERE  user_id NOT IN (SELECT raw_events_second.user_id
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                 coordinator_plan
 ---------------------------------------------------------------------

@@ -1304,7 +1304,7 @@ ORDER BY
   4 DESC, 1 DESC, 2 ASC, 3 ASC
 LIMIT 10;
 WARNING:  list_length before removal: 8
-WARNING:  list_length after removal: 5
+WARNING:  list_length after removal: 2
  user_id | value_2 | value_3 | counts
 ---------------------------------------------------------------------
        5 |       3 |       4 |    640
@@ -2417,7 +2417,7 @@ LATERAL (
 ORDER BY user_id, value_2, cnt
 LIMIT 1;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
  user_id | value_2 | cnt
 ---------------------------------------------------------------------
        2 |       0 |   2

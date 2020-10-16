@@ -161,7 +161,7 @@ WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_se
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
        coordinator_plan       
 ------------------------------
@@ -184,7 +184,7 @@ WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_se
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
        coordinator_plan       
 ------------------------------
@@ -208,7 +208,7 @@ WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_se
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
 WARNING:  list_length before removal: 0
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
@@ -239,7 +239,7 @@ WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_se
 $Q$);
 WARNING:  list_length before removal: 2
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
        coordinator_plan       
 ------------------------------

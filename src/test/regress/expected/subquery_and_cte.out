@@ -77,7 +77,7 @@ FROM cte1, cte2
 ORDER BY cte1.user_id, cte1.value_1, cte2.user_id, cte2.event_type
 LIMIT 5;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
  user_id | value_1 | user_id | event_type 
 ---------+---------+---------+------------
        1 |       1 |       1 |          0
@@ -98,7 +98,7 @@ FROM cte1, cte2
 ORDER BY cte1.user_id, cte1.value_1, cte2.user_id, cte2.event_type
 LIMIT 5;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 8_1 for CTE cte1: SELECT user_id, "time", value_1, value_2, value_3, value_4 FROM subquery_and_ctes.users_table WHERE (user_id OPERATOR(pg_catalog.=) 1)
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -122,7 +122,7 @@ WITH cte1 AS (
 UPDATE dist_table dt SET value = cte1.value_1
 FROM cte1 WHERE cte1.user_id = dt.id AND dt.id = 1;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 -- users_table & events_table & dist_table are colocated, route entire query
 WITH cte1 AS (
    SELECT * FROM users_table WHERE user_id = 1
@@ -132,7 +132,7 @@ WITH cte1 AS (
 UPDATE dist_table dt SET value = cte1.value_1 + cte2.event_type
 FROM cte1, cte2 WHERE cte1.user_id = dt.id AND dt.id = 1;
 WARNING:  list_length before removal: 12
-WARNING:  list_length after removal: 12
+WARNING:  list_length after removal: 1
 -- all relations are not colocated, CTEs become intermediate results
 WITH cte1 AS (
    SELECT * FROM users_table WHERE user_id = 1
@@ -142,7 +142,7 @@ WITH cte1 AS (
 UPDATE dist_table dt SET value = cte1.value_1 + cte2.event_type
 FROM cte1, cte2 WHERE cte1.user_id = dt.id AND dt.id = 1;
 WARNING:  list_length before removal: 12
-WARNING:  list_length after removal: 12
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 13_1 for CTE cte1: SELECT user_id, "time", value_1, value_2, value_3, value_4 FROM subquery_and_ctes.users_table WHERE (user_id OPERATOR(pg_catalog.=) 1)
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -155,7 +155,7 @@ WITH cte1 AS (SELECT id, value FROM func())
 UPDATE dist_table dt SET value = cte1.value
 FROM cte1 WHERE dt.id = 1;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 16_1 for CTE cte1: SELECT id, value FROM subquery_and_ctes.func() func(id, value)
 DEBUG:  Plan 16 query after replacing subqueries and CTEs: UPDATE subquery_and_ctes.dist_table dt SET value = cte1.value FROM (SELECT intermediate_result.id, intermediate_result.value FROM read_intermediate_result('16_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer, value integer)) cte1 WHERE (dt.id OPERATOR(pg_catalog.=) 1)
 -- CTEs are recursively planned, and subquery foo is also recursively planned
@@ -651,7 +651,7 @@ SELECT create_reference_table('ref_table_2');
 (1 row)
 
 CREATE TABLE dist (a int,  b text);
-DEBUG:  building index "pg_toast_17946_index" on table "pg_toast_17946" serially
+DEBUG:  building index "pg_toast_17962_index" on table "pg_toast_17962" serially
 SELECT create_distributed_table('dist', 'a');
  create_distributed_table 
 --------------------------

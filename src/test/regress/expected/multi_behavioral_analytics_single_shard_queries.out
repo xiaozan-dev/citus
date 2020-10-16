@@ -21,7 +21,7 @@ FROM (
 ) q
 WHERE user_id = 2;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 1
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
 WARNING:  list_length before removal: 0
