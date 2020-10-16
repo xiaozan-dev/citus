@@ -160,7 +160,7 @@ WARNING:  list_length after removal: 1
 
 EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
 WARNING:  list_length before removal: 150
-WARNING:  list_length after removal: 11
+WARNING:  list_length after removal: 26
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  UNITED KINGDOM            | CHINA                     |   1996 | 18560.2200
@@ -168,7 +168,7 @@ WARNING:  list_length after removal: 11
 
 EXECUTE prepared_test_7('FRANCE', 'GERMANY');
 WARNING:  list_length before removal: 150
-WARNING:  list_length after removal: 11
+WARNING:  list_length after removal: 26
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  GERMANY                   | FRANCE                    |   1995 | 2399.2948
@@ -191,7 +191,7 @@ EXECUTE prepared_test_3;
 
 EXECUTE prepared_test_7('FRANCE', 'GERMANY');
 WARNING:  list_length before removal: 150
-WARNING:  list_length after removal: 11
+WARNING:  list_length after removal: 26
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  GERMANY                   | FRANCE                    |   1995 | 2399.2948
@@ -225,7 +225,7 @@ EXECUTE prepared_test_4;
 
 EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
 WARNING:  list_length before removal: 150
-WARNING:  list_length after removal: 11
+WARNING:  list_length after removal: 26
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  UNITED KINGDOM            | CHINA                     |   1996 | 18560.2200
@@ -240,7 +240,7 @@ EXECUTE prepared_test_2;
 -- CREATE TABLE ... AS EXECUTE prepared_statement tests
 CREATE TEMP TABLE prepared_sql_test_7 AS EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
 WARNING:  list_length before removal: 150
-WARNING:  list_length after removal: 11
+WARNING:  list_length after removal: 26
 SELECT * from prepared_sql_test_7;
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------

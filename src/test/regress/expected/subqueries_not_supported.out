@@ -53,7 +53,7 @@ FROM
 	SELECT avg(DISTINCT value_1), random() FROM users_table GROUP BY value_2 OFFSET 3
 ) as foo;
 WARNING:  list_length before removal: 18
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 18
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  generating subplan 4_1 for subquery SELECT avg(DISTINCT value_1) AS avg, random() AS random FROM public.users_table GROUP BY user_id OFFSET 3

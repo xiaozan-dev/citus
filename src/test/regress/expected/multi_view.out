@@ -154,7 +154,7 @@ SELECT count(distinct o_orderkey) FROM priority_orders join air_shipped_lineitem
 	ON (o_orderkey = l_orderkey)
 	WHERE (o_orderkey = 231);
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 2
  count 
 -------
      1
@@ -165,7 +165,7 @@ SELECT distinct(o_orderkey) FROM priority_orders join air_shipped_lineitems
 	ON (o_orderkey = l_orderkey)
 	WHERE (o_orderkey = 231);
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 2
  o_orderkey 
 ------------
         231
@@ -657,7 +657,7 @@ WARNING:  list_length after removal: 4
 -- it is supported when it is a router query
 SELECT count(*) FROM events_table et WHERE et.user_id IN (SELECT user_id FROM recent_selected_users WHERE user_id = 1);
 WARNING:  list_length before removal: 5
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 5
  count 
 -------
     30
@@ -1283,7 +1283,7 @@ WARNING:  list_length after removal: 0
 -- below statement should not update anything. so it should return empty
 UPDATE large SET id=46 FROM small_view WHERE small_view.id=large.id and large.id=15 RETURNING large.id, large.tenant_id;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 2
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
  id | tenant_id 
@@ -1620,7 +1620,7 @@ WARNING:  list_length after removal: 0
 -- below statement should not update anything. so it should return empty
 UPDATE large SET id=46 FROM small_view WHERE small_view.id=large.id and large.id=15 RETURNING large.id, large.tenant_id;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 2
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
  id | tenant_id 

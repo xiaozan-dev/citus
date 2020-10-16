@@ -191,7 +191,7 @@ CREATE TABLE my_table (a int, b myvarchar);
 -- like TOAST and I/O functions control (Tomas Vondra, Tom Lane)"""
 SELECT create_distributed_table('my_table', 'a');
 ERROR:  type "test_pg13.myvarchar" does not exist
-CONTEXT:  while executing command on localhost:57637
+CONTEXT:  while executing command on localhost:57638
 CREATE TABLE test_table(a int, b tsvector);
 SELECT create_distributed_table('test_table', 'a');
  create_distributed_table 

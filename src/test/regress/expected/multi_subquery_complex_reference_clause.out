@@ -998,7 +998,7 @@ ORDER BY
   user_id DESC
 LIMIT 10;
 WARNING:  list_length before removal: 10
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 7
  user_id |            lastseen
 ---------------------------------------------------------------------
        1 | Thu Nov 23 21:54:46.924477 2017
@@ -1162,7 +1162,7 @@ ORDER BY
   value_3 DESC
 LIMIT 10;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 4
  user_id | value_3
 ---------------------------------------------------------------------
        3 |       5

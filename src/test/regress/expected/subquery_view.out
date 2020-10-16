@@ -391,7 +391,7 @@ SELECT
 FROM
 	all_executors_view;
 WARNING:  list_length before removal: 52
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 51
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  generating subplan 26_1 for subquery SELECT value_2 FROM public.users_table WHERE (user_id OPERATOR(pg_catalog.=) 15) OFFSET 0

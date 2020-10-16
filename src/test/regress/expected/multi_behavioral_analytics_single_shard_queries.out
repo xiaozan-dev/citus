@@ -21,7 +21,7 @@ FROM (
 ) q
 WHERE user_id = 2;
 WARNING:  list_length before removal: 2
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 2
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
 WARNING:  list_length before removal: 0
@@ -109,9 +109,9 @@ FROM (
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
 WARNING:  list_length before removal: 6
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 6
 WARNING:  list_length before removal: 6
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 6
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 --  Funnel grouped by whether or not a user has done an event -- two shards query
@@ -274,7 +274,7 @@ WHERE user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 1 AND value_1
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 5 AND value_1 <= 6)
     AND user_id = 1;
 WARNING:  list_length before removal: 36
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 36
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
 WARNING:  list_length before removal: 0
@@ -367,7 +367,7 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type > 1 AND event_type <= 3 AND value_3 > 1 AND user_id=users_table.user_id)
   AND  NOT EXISTS (SELECT user_id FROM events_table WHERE event_type > 4 AND event_type <= 5 AND value_3 > 4 AND user_id=users_table.user_id);
 WARNING:  list_length before removal: 8
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 7
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
 WARNING:  list_length before removal: 0

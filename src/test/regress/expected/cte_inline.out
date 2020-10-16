@@ -186,13 +186,13 @@ FROM top_cte,
 DEBUG:  CTE top_cte is going to be inlined via distributed planning
 DEBUG:  CTE cte_1 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
-WARNING:  list_length before removal: 1
-WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for CTE top_cte: SELECT key, value, other_value FROM cte_inline.test_table
 WARNING:  list_length before removal: 0
@@ -299,7 +299,7 @@ FROM
 DEBUG:  CTE cte_1 is going to be inlined via distributed planning
 DEBUG:  CTE cte_2 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -717,7 +717,7 @@ SELECT count(*)
 	   LEFT JOIN test_table u2 ON u2.key = bar.key) AS foo ON TRUE;
 DEBUG:  CTE bar is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
  count
 ---------------------------------------------------------------------
@@ -741,13 +741,13 @@ SELECT count(*)
 	   LEFT JOIN test_table u2 ON u2.key = bar.value::int) AS foo ON TRUE;
 DEBUG:  CTE bar is going to be inlined via distributed planning
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  skipping recursive planning for the subquery since it contains references to outer queries
 DEBUG:  skipping recursive planning for the subquery since it contains references to outer queries
 DEBUG:  skipping recursive planning for the subquery since it contains references to outer queries
-WARNING:  list_length before removal: 3
-WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 ERROR:  CTEs that refer to other subqueries are not supported in multi-shard queries
 -- inlined CTE can recursively planned later, that's the decision
@@ -1116,7 +1116,7 @@ ORDER BY value, other_value, z, y, t, m, cte_2_key
 LIMIT 5;
 DEBUG:  CTE cte_3 is going to be inlined via distributed planning
 WARNING:  list_length before removal: 8
-WARNING:  list_length after removal: 2
+WARNING:  list_length after removal: 8
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for CTE cte_2: SELECT value, other_value, key FROM cte_inline.test_table
 WARNING:  list_length before removal: 0

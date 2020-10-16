@@ -69,9 +69,9 @@ FROM
 	GROUP BY
 		l_orderkey) AS unit_prices;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 4
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 1
+WARNING:  list_length after removal: 4
 ERROR:  cannot perform distributed planning on this query
 DETAIL:  Cartesian products are currently unsupported
 RESET client_min_messages;

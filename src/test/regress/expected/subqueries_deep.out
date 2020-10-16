@@ -83,12 +83,12 @@ FROM (
 ORDER BY 2 DESC, 1;
 DEBUG:  CTE cte is going to be inlined via distributed planning
 WARNING:  list_length before removal: 24
-WARNING:  list_length after removal: 12
+WARNING:  list_length after removal: 16
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  generating subplan 6_1 for subquery SELECT count(*) AS count FROM public.users_table
 WARNING:  list_length before removal: 8
-WARNING:  list_length after removal: 4
+WARNING:  list_length after removal: 8
 DEBUG:  push down of limit count: 5
 DEBUG:  generating subplan 6_2 for subquery SELECT user_id FROM public.users_table WHERE ((value_2 OPERATOR(pg_catalog.>=) 5) AND (EXISTS (SELECT events_table.user_id FROM public.events_table WHERE ((events_table.event_type OPERATOR(pg_catalog.>) 1) AND (events_table.event_type OPERATOR(pg_catalog.<=) 3) AND (events_table.value_3 OPERATOR(pg_catalog.>) (1)::double precision) AND (events_table.user_id OPERATOR(pg_catalog.=) users_table.user_id)))) AND (NOT (EXISTS (SELECT events_table.user_id FROM public.events_table WHERE ((events_table.event_type OPERATOR(pg_catalog.>) 3) AND (events_table.event_type OPERATOR(pg_catalog.<=) 4) AND (events_table.value_3 OPERATOR(pg_catalog.>) (1)::double precision) AND (events_table.user_id OPERATOR(pg_catalog.=) users_table.user_id))))) AND (EXISTS (SELECT cte.count FROM (SELECT intermediate_result.count FROM read_intermediate_result('6_1'::text, 'binary'::citus_copy_format) intermediate_result(count bigint)) cte))) LIMIT 5
 WARNING:  list_length before removal: 14

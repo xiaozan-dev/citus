@@ -726,7 +726,7 @@ FROM (
 ORDER BY 2 DESC, 1;
 $$);
 WARNING:  list_length before removal: 60
-WARNING:  list_length after removal: 13
+WARNING:  list_length after removal: 24
 WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 60_1 for subquery SELECT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.value_2) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4])))
@@ -738,7 +738,7 @@ WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 60_3 for subquery SELECT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.value_2) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[5, 6, 7, 8])))
 WARNING:  list_length before removal: 48
-WARNING:  list_length after removal: 9
+WARNING:  list_length after removal: 18
 DEBUG:  generating subplan 60_4 for subquery SELECT DISTINCT ON ((e.event_type)::text) (e.event_type)::text AS event, e."time", e.user_id FROM public.users_table u, public.events_table e, (SELECT intermediate_result.user_id FROM read_intermediate_result('60_3'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) bar WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.user_id FROM read_intermediate_result('60_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer))))
 WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
@@ -1110,7 +1110,7 @@ JOIN LATERAL
       WHERE user_id = users_table.user_id) AS bar
    LEFT JOIN users_table u2 ON u2.user_id = bar.value_2) AS foo ON TRUE;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -1175,7 +1175,7 @@ JOIN LATERAL
       WHERE user_id = users_table_limited.user_id) AS bar
         LEFT JOIN users_table u2 ON u2.user_id = bar.value_2) AS foo ON TRUE;
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -1234,7 +1234,7 @@ SELECT count(*) FROM events_table WHERE user_id NOT IN
             LEFT JOIN users_table u2 ON u2.user_id = bar.value_2) AS foo ON TRUE
   );
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
@@ -1261,7 +1261,7 @@ WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan 109_6 for subquery SELECT intermediate_result.user_id, intermediate_result."time", intermediate_result.event_type, intermediate_result.value_2, intermediate_result.value_3, intermediate_result.value_4 FROM read_intermediate_result('109_4'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, "time" timestamp without time zone, event_type integer, value_2 integer, value_3 double precision, value_4 bigint) INTERSECT SELECT intermediate_result.user_id, intermediate_result."time", intermediate_result.event_type, intermediate_result.value_2, intermediate_result.value_3, intermediate_result.value_4 FROM read_intermediate_result('109_5'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, "time" timestamp without time zone, event_type integer, value_2 integer, value_3 double precision, value_4 bigint)
 WARNING:  list_length before removal: 4
-WARNING:  list_length after removal: 3
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
 ERROR:  cannot pushdown the subquery
 -- make sure that non-colocated subquery joins work fine in

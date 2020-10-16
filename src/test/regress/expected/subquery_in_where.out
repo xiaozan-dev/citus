@@ -569,7 +569,7 @@ WHERE EXISTS
 	WHERE
 		events_table.value_2 = events_table.user_id);
 WARNING:  list_length before removal: 14
-WARNING:  list_length after removal: 7
+WARNING:  list_length after removal: 11
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 10
@@ -635,7 +635,7 @@ WHERE NOT EXISTS
 	WHERE
 		events_table.value_2 = events_table.user_id + 6);
 WARNING:  list_length before removal: 14
-WARNING:  list_length after removal: 7
+WARNING:  list_length after removal: 11
 WARNING:  list_length before removal: 0
 WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 10

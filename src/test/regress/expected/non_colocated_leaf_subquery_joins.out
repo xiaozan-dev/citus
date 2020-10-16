@@ -162,7 +162,7 @@ FROM (
 ORDER BY 2 DESC, 1;
 $$);
 WARNING:  list_length before removal: 60
-WARNING:  list_length after removal: 13
+WARNING:  list_length after removal: 24
 WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 14_1 for subquery SELECT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.value_2) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4])))
@@ -174,7 +174,7 @@ WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
 DEBUG:  generating subplan 14_3 for subquery SELECT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.value_2) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[5, 6, 7, 8])))
 WARNING:  list_length before removal: 48
-WARNING:  list_length after removal: 9
+WARNING:  list_length after removal: 18
 DEBUG:  generating subplan 14_4 for subquery SELECT DISTINCT ON ((e.event_type)::text) (e.event_type)::text AS event, e."time", e.user_id FROM public.users_table u, public.events_table e, (SELECT intermediate_result.user_id FROM read_intermediate_result('14_3'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) bar WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.user_id FROM read_intermediate_result('14_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer))))
 WARNING:  list_length before removal: 2
 WARNING:  list_length after removal: 1
