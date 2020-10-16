@@ -646,8 +646,10 @@ CreateDistributedPlannedStmt(DistributedPlanningContext *planContext)
 		hasUnresolvedParams = true;
 	}
 
+	elog(WARNING, "list_length before removal: %d", list_length(planContext->plannerRestrictionContext->joinRestrictionContext->joinRestrictionList));
 	planContext->plannerRestrictionContext->joinRestrictionContext =
 		RemoveDuplicateJoinRestrictions(joinRestrictionContext);
+	elog(WARNING, "list_length after removal: %d", list_length(planContext->plannerRestrictionContext->joinRestrictionContext->joinRestrictionList));
 
 	DistributedPlan *distributedPlan =
 		CreateDistributedPlan(planId, planContext->originalQuery, planContext->query,
