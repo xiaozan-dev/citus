@@ -27,11 +27,13 @@ FROM (
   GROUP BY user_id
 ) q
 ORDER BY 2 DESC, 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | array_length
 ---------------------------------------------------------------------
-       3 |          187
-       2 |          180
-       1 |           28
+       3 |          748
+       2 |          720
+       1 |          112
 (3 rows)
 
 ---------------------------------------------------------------------
@@ -75,6 +77,8 @@ FROM (
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event
 ORDER BY user_id;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  user_id | sum | length | hasdone_event
 ---------------------------------------------------------------------
        1 |  12 |     14 | Has done event
@@ -122,6 +126,8 @@ FROM (
 	  GROUP BY  t1.user_id, hasdone_event
 	) t GROUP BY user_id, hasdone_event
 	ORDER BY user_id) u;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  count
 ---------------------------------------------------------------------
      3
@@ -157,6 +163,8 @@ FROM (
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event
 ORDER BY user_id;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  user_id | sum | length | hasdone_event
 ---------------------------------------------------------------------
        1 |  12 |     14 | Has done event
@@ -196,6 +204,8 @@ FROM (
 	  GROUP BY  t1.user_id, hasdone_event
 	) t GROUP BY user_id, hasdone_event
     ORDER BY user_id) u;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
      3
@@ -268,11 +278,13 @@ GROUP BY
   count_pay, user_id
 ORDER BY
   event_average DESC, count_pay DESC, user_id DESC;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  user_id |    event_average    | count_pay
 ---------------------------------------------------------------------
-       3 | 19.0000000000000000 |         7
-       2 | 12.0000000000000000 |         9
-       1 |  7.0000000000000000 |         5
+       3 | 19.0000000000000000 |        14
+       2 | 12.0000000000000000 |        18
+       1 |  7.0000000000000000 |        10
 (3 rows)
 
 SELECT
@@ -341,11 +353,13 @@ HAVING
   avg(array_length(events_table, 1)) > 0
 ORDER BY
   event_average DESC, count_pay DESC, user_id DESC;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  user_id |    event_average    | count_pay
 ---------------------------------------------------------------------
-       3 | 19.0000000000000000 |         3
-       2 | 12.0000000000000000 |         4
-       1 |  7.0000000000000000 |         3
+       3 | 19.0000000000000000 |         6
+       2 | 12.0000000000000000 |         8
+       1 |  7.0000000000000000 |         6
 (3 rows)
 
 -- Same queries rewritten without using unions
@@ -406,11 +420,13 @@ GROUP BY
   count_pay, user_id
 ORDER BY
   event_average DESC, count_pay DESC, user_id DESC;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  user_id |    event_average    | count_pay
 ---------------------------------------------------------------------
-       3 | 12.0000000000000000 |         4
-       2 |  9.0000000000000000 |         5
-       1 |  5.0000000000000000 |         2
+       3 | 12.0000000000000000 |         8
+       2 |  9.0000000000000000 |        10
+       1 |  5.0000000000000000 |         4
 (3 rows)
 
 SELECT
@@ -467,11 +483,13 @@ HAVING
   avg(array_length(events_table, 1)) > 0
 ORDER BY
   event_average DESC, count_pay DESC, user_id DESC;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  user_id |    event_average    | count_pay
 ---------------------------------------------------------------------
-       3 | 12.0000000000000000 |         4
-       2 |  9.0000000000000000 |         5
-       1 |  5.0000000000000000 |         2
+       3 | 12.0000000000000000 |         8
+       2 |  9.0000000000000000 |        10
+       1 |  5.0000000000000000 |         4
 (3 rows)
 
 ---------------------------------------------------------------------
@@ -504,10 +522,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC, user_id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id |          user_lastseen          | array_length
 ---------------------------------------------------------------------
-       2 | Thu Nov 23 11:47:26.900284 2017 |           12
-       3 | Thu Nov 23 11:18:53.114408 2017 |           14
+       2 | Thu Nov 23 11:47:26.900284 2017 |           48
+       3 | Thu Nov 23 11:18:53.114408 2017 |           56
 (2 rows)
 
 ---------------------------------------------------------------------
@@ -523,6 +543,8 @@ GROUP BY
 ORDER BY
   user_id DESC
   LIMIT 5;
+WARNING:  list_length before removal: 36
+WARNING:  list_length after removal: 9
  user_id
 ---------------------------------------------------------------------
        6
@@ -541,13 +563,15 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND EXISTS (SELECT user_id FROM events_table WHERE event_type > 1 AND event_type < 3 AND value_3 > 1 AND user_id = users_table.user_id)
 ORDER BY 2 DESC, 1 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
  user_id | value_2
 ---------------------------------------------------------------------
        6 |       4
        6 |       4
+       6 |       4
+       6 |       4
        2 |       4
-       6 |       3
-       4 |       3
 (5 rows)
 
 ---------------------------------------------------------------------
@@ -559,11 +583,13 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND NOT EXISTS (SELECT user_id FROM events_table WHERE event_type=2 AND value_3 > 1 AND user_id = users_table.user_id)
 ORDER BY 1 DESC, 2 DESC
 LIMIT 3;
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
  user_id | value_2
 ---------------------------------------------------------------------
        5 |       5
        5 |       5
-       5 |       2
+       5 |       5
 (3 rows)
 
 ---------------------------------------------------------------------
@@ -578,13 +604,15 @@ GROUP BY
   user_id
 ORDER BY cnt DESC, user_id DESC
 LIMIT 5;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 9
  user_id | cnt
 ---------------------------------------------------------------------
-       4 |  43
-       2 |  37
-       3 |  34
-       1 |  17
-       6 |  15
+       4 |  86
+       2 |  74
+       3 |  68
+       1 |  34
+       6 |  30
 (5 rows)
 
 ---------------------------------------------------------------------
@@ -596,12 +624,14 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND  NOT EXISTS (SELECT user_id FROM events_table WHERE event_type > 3 AND event_type <= 4  AND value_3 > 1 AND user_id = users_table.user_id)
 ORDER BY 2 DESC, 1 DESC
 LIMIT 4;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
  user_id | value_2
 ---------------------------------------------------------------------
        5 |       5
        5 |       5
        5 |       5
-       5 |       4
+       5 |       5
 (4 rows)
 
 ---------------------------------------------------------------------
@@ -626,11 +656,14 @@ GROUP BY
 ORDER BY
   1 DESC, 2 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  user_id |        avg
 ---------------------------------------------------------------------
        4 | 2.0000000000000000
        3 | 2.0000000000000000
-(2 rows)
+       2 | 2.6666666666666667
+(3 rows)
 
 ---------------------------------------------------------------------
 -- Find me all users_table who logged in more than once
@@ -648,13 +681,16 @@ SELECT user_id, value_1 from
 ) AS a
 ORDER BY
   user_id ASC, value_1 ASC;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  user_id | value_1
 ---------------------------------------------------------------------
        2 |       0
+       2 |       1
        2 |       2
        2 |       3
        2 |       4
-(4 rows)
+(5 rows)
 
 -- same query with additional filter to make it not router plannable
 SELECT user_id, value_1 from
@@ -669,17 +705,22 @@ SELECT user_id, value_1 from
 ) AS a
 ORDER BY
   user_id ASC, value_1 ASC;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  user_id | value_1
 ---------------------------------------------------------------------
        2 |       0
+       2 |       1
        2 |       2
        2 |       3
        2 |       4
+       3 |       0
        3 |       1
        3 |       2
        3 |       3
        3 |       4
-(8 rows)
+       3 |       5
+(11 rows)
 
 ---------------------------------------------------------------------
 -- Find me all users_table who has done some event and has filters
@@ -697,14 +738,21 @@ WHERE
    	          value_1 = 1 AND value_2 > 2
             )
 ORDER BY 1;
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
  user_id
 ---------------------------------------------------------------------
        1
+       1
+       2
+       2
        2
        2
        3
+       3
        5
-(5 rows)
+       5
+(10 rows)
 
 ---------------------------------------------------------------------
 -- Which events_table did people who has done some specific events_table
@@ -717,6 +765,8 @@ GROUP BY
   user_id, event_type
 ORDER BY 2 DESC, 1
 LIMIT 3;
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
  user_id | event_type
 ---------------------------------------------------------------------
        1 |          6
@@ -742,14 +792,17 @@ SELECT user_id FROM
 ) AS a
 ORDER BY
   user_id;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  user_id
 ---------------------------------------------------------------------
        1
        2
        3
        4
+       5
        6
-(5 rows)
+(6 rows)
 
 ---------------------------------------------------------------------
 -- Find my assets that have the highest probability and fetch their metadata
@@ -770,11 +823,13 @@ FROM
   ON users_table.user_id = temp.user_id
   WHERE
     users_table.value_1 < 2;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
   -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM assets;
  count | count |        avg
 ---------------------------------------------------------------------
-   732 |     6 | 3.3934426229508197
+  5856 |     6 | 3.3934426229508197
 (1 row)
 
 DROP TABLE assets;
@@ -795,6 +850,10 @@ SELECT count(*) FROM
   HAVING
     count(distinct value_1) = 2
 ) as foo;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id FROM public.users_table WHERE (value_1 OPERATOR(pg_catalog.=) 4)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT users_table.user_id FROM public.users_table WHERE (((users_table.value_1 OPERATOR(pg_catalog.=) 1) OR (users_table.value_1 OPERATOR(pg_catalog.=) 3)) AND (NOT (users_table.user_id OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer))))) GROUP BY users_table.user_id HAVING (count(DISTINCT users_table.value_1) OPERATOR(pg_catalog.=) 2)) foo
  count
@@ -831,6 +890,8 @@ SELECT subquery_count FROM
     GROUP BY
       a.user_id
     ) AS inner_subquery;
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
  subquery_count
 ---------------------------------------------------------------------
               1
@@ -864,6 +925,8 @@ WHERE
   b.user_id IS NULL
 GROUP BY
   a.user_id;
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
  subquery_count
 ---------------------------------------------------------------------
               1
@@ -942,6 +1005,8 @@ WHERE
 GROUP BY
   e1.user_id
 LIMIT 1;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 2
  user_id | viewed_homepage | use_demo | entered_credit_card | submit_card_info | see_bought_screen
 ---------------------------------------------------------------------
        1 |               1 |        1 |                   1 |                1 |                 1
@@ -1007,14 +1072,16 @@ FROM (
 GROUP BY e1.user_id
 ORDER BY 6 DESC  NULLS LAST, 5 DESC  NULLS LAST, 4 DESC  NULLS LAST, 3 DESC  NULLS LAST, 2 DESC  NULLS LAST, 1
 LIMIT 15;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 2
  user_id | viewed_homepage | use_demo | entered_credit_card | submit_card_info | see_bought_screen
 ---------------------------------------------------------------------
-       2 |            1080 |     1080 |                1080 |             1080 |              1080
-       3 |             540 |      540 |                 540 |              540 |               540
-       4 |             252 |      252 |                 252 |              252 |               252
-       1 |             200 |      200 |                 200 |              200 |               200
-       6 |             128 |      128 |                 128 |              128 |               128
-       5 |              72 |       72 |                  72 |               72 |                72
+       2 |           17280 |    17280 |               17280 |            17280 |             17280
+       3 |            8640 |     8640 |                8640 |             8640 |              8640
+       4 |            4032 |     4032 |                4032 |             4032 |              4032
+       1 |            3200 |     3200 |                3200 |             3200 |              3200
+       6 |            2048 |     2048 |                2048 |             2048 |              2048
+       5 |            1152 |     1152 |                1152 |             1152 |              1152
 (6 rows)
 
 -- Same query without all limitations but uses having() to show only those submitted their credit card info
@@ -1078,14 +1145,16 @@ group by e1.user_id
 HAVING sum(submit_card_info) > 0
 ORDER BY 6 DESC  NULLS LAST, 5 DESC  NULLS LAST, 4 DESC  NULLS LAST, 3 DESC  NULLS LAST, 2 DESC  NULLS LAST, 1
 LIMIT 15;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 2
  user_id | viewed_homepage | use_demo | entered_credit_card | submit_card_info | see_bought_screen
 ---------------------------------------------------------------------
-       2 |            1080 |     1080 |                1080 |             1080 |              1080
-       3 |             540 |      540 |                 540 |              540 |               540
-       4 |             252 |      252 |                 252 |              252 |               252
-       1 |             200 |      200 |                 200 |              200 |               200
-       6 |             128 |      128 |                 128 |              128 |               128
-       5 |              72 |       72 |                  72 |               72 |                72
+       2 |           17280 |    17280 |               17280 |            17280 |             17280
+       3 |            8640 |     8640 |                8640 |             8640 |              8640
+       4 |            4032 |     4032 |                4032 |             4032 |              4032
+       1 |            3200 |     3200 |                3200 |             3200 |              3200
+       6 |            2048 |     2048 |                2048 |             2048 |              2048
+       5 |            1152 |     1152 |                1152 |             1152 |              1152
 (6 rows)
 
 -- Explain analyze on this query fails due to #756
@@ -1118,6 +1187,8 @@ GROUP BY
 ORDER BY
   avg(b.value_3), 2, 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id |    subquery_avg
 ---------------------------------------------------------------------
        3 | 3.6000000000000000
@@ -1155,6 +1226,8 @@ HAVING
 ORDER BY
   avg(b.value_3), 2, 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id |    subquery_avg
 ---------------------------------------------------------------------
        3 | 3.6000000000000000
@@ -1194,6 +1267,8 @@ GROUP BY
 ORDER BY
   avg(b.value_3) DESC, 2, 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id |    subquery_avg    |       avg
 ---------------------------------------------------------------------
        1 | 2.3333333333333333 | 3.33333333333333
@@ -1228,14 +1303,16 @@ GROUP BY
 ORDER BY
   4 DESC, 1 DESC, 2 ASC, 3 ASC
 LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 1
  user_id | value_2 | value_3 | counts
 ---------------------------------------------------------------------
-       5 |       3 |       4 |    160
-       2 |       3 |       5 |    156
-       3 |       2 |       5 |    108
-       4 |       2 |       4 |     90
-       1 |       2 |       5 |     60
-       6 |       2 |       5 |     48
+       5 |       3 |       4 |    640
+       2 |       3 |       5 |    624
+       3 |       2 |       5 |    432
+       4 |       2 |       4 |    360
+       1 |       2 |       5 |    240
+       6 |       2 |       5 |    192
 (6 rows)
 
 -- distinct users joined with events
@@ -1255,13 +1332,15 @@ GROUP BY
 ORDER BY
   users_count desc, avg_type DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
       avg_type      | users_count
 ---------------------------------------------------------------------
- 2.3750000000000000 |          24
- 2.5714285714285714 |          21
- 2.5294117647058824 |          17
- 2.7333333333333333 |          15
- 2.2142857142857143 |          14
+ 2.3750000000000000 |          48
+ 2.5714285714285714 |          42
+ 2.5294117647058824 |          34
+ 2.7333333333333333 |          30
+ 2.2142857142857143 |          28
 (5 rows)
 
 -- reduce the data set, aggregate and join
@@ -1284,13 +1363,15 @@ FROM events_table
 ORDER BY
   users_count.ct desc, event_type DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  event_type | ct
 ---------------------------------------------------------------------
-          5 | 26
-          4 | 26
-          3 | 26
-          3 | 26
-          3 | 26
+          5 | 52
+          5 | 52
+          4 | 52
+          4 | 52
+          3 | 52
 (5 rows)
 
 --- now, test (subquery JOIN subquery)
@@ -1316,18 +1397,20 @@ FROM
 ORDER BY
   total_count DESC, count_1 DESC, 1 DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | count_1 | total_count
 ---------------------------------------------------------------------
-       2 |      18 |           7
-       3 |      17 |           7
-       2 |      18 |           6
-       5 |      26 |           5
-       5 |      26 |           5
-       4 |      23 |           5
-       3 |      17 |           5
-       1 |       7 |           5
-       4 |      23 |           4
-       4 |      23 |           4
+       2 |      36 |          14
+       3 |      34 |          14
+       2 |      36 |          12
+       5 |      52 |          10
+       5 |      52 |          10
+       4 |      46 |          10
+       3 |      34 |          10
+       1 |      14 |          10
+       4 |      46 |           8
+       4 |      46 |           8
 (10 rows)
 
 SELECT a.user_id, avg(b.value_2) as subquery_avg
@@ -1358,6 +1441,8 @@ WHERE b.user_id IS NOT NULL
 GROUP BY a.user_id
 ORDER BY avg(b.value_3), 2, 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id |      subquery_avg
 ---------------------------------------------------------------------
        5 | 0.00000000000000000000
@@ -1393,6 +1478,8 @@ FROM
 	) AS b
 	USING (user_id)
 GROUP BY user_id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot push down this subquery
 DETAIL:  Distinct on columns without partition column is currently unsupported
 SELECT a.user_id, avg(b.value_2) as subquery_avg
@@ -1426,6 +1513,8 @@ GROUP BY
 ORDER BY
   avg(b.value_3), 2, 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id |    subquery_avg
 ---------------------------------------------------------------------
        3 | 3.3333333333333333
@@ -1464,18 +1553,20 @@ FROM
 ORDER BY
   prob DESC, value_2 DESC, user_id DESC, event_type DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | event_type
 ---------------------------------------------------------------------
+       3 |          5
+       3 |          5
+       3 |          5
        3 |          5
        3 |          4
        3 |          4
        3 |          4
        3 |          4
-       3 |          3
-       3 |          3
-       3 |          3
-       3 |          3
-       3 |          3
+       3 |          4
+       3 |          4
 (10 rows)
 
 -- very similar query but produces different result due to
@@ -1502,18 +1593,20 @@ FROM
 ORDER BY
   prob DESC, event_type DESC, user_id DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | event_type
 ---------------------------------------------------------------------
        3 |          5
+       3 |          5
+       3 |          5
+       3 |          5
        2 |          5
        2 |          5
-       3 |          4
-       3 |          4
-       3 |          4
-       3 |          4
-       2 |          4
-       2 |          4
-       2 |          4
+       2 |          5
+       2 |          5
+       2 |          5
+       2 |          5
 (10 rows)
 
 -- now they produce the same result when ordering fixed in 'outer_sub'
@@ -1548,18 +1641,20 @@ FROM
 ORDER BY
   prob DESC, event_type DESC, user_id DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | event_type
 ---------------------------------------------------------------------
        3 |          5
+       3 |          5
+       3 |          5
+       3 |          5
        2 |          5
        2 |          5
-       3 |          4
-       3 |          4
-       3 |          4
-       3 |          4
-       2 |          4
-       2 |          4
-       2 |          4
+       2 |          5
+       2 |          5
+       2 |          5
+       2 |          5
 (10 rows)
 
 -- this is one complex join query derived from a user's production query
@@ -1647,6 +1742,8 @@ AS outer_outer_sub_q
 ORDER BY
   value_3 ASC, user_id DESC, array_index(ARRAY [1, 2, 3], (value_2 % 3)) ASC, event_type_e DESC
 LIMIT 10;
+WARNING:  list_length before removal: 14
+WARNING:  list_length after removal: 5
  user_id_e | event_type_e | value_2 | value_3 | user_id
 ---------------------------------------------------------------------
          5 |            5 |       2 |       0 |       5
@@ -1730,6 +1827,8 @@ FROM
 ORDER BY
 	value_3 ASC, user_id DESC, array_index(ARRAY [1, 2, 3], (value_2 % 3)) ASC, event_type_e DESC
 LIMIT 10;
+WARNING:  list_length before removal: 14
+WARNING:  list_length after removal: 5
  user_id_e | event_type_e | value_2 | value_3 | user_id
 ---------------------------------------------------------------------
          5 |            5 |       2 |       0 |       5
@@ -1773,6 +1872,8 @@ FROM (
   ON a.user_id = b.user_id
 WHERE b.user_id IS NULL
 GROUP BY a.user_id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  subquery_count
 ---------------------------------------------------------------------
               1
@@ -1801,6 +1902,8 @@ FROM (
   ON a.user_id = b.user_id
 WHERE b.user_id IS NULL
 GROUP BY a.user_id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot push down this subquery
 DETAIL:  Subqueries without a FROM clause can only contain immutable functions
 -- this is slightly different, we use RTE_VALUEs here
@@ -1823,6 +1926,8 @@ FROM (SELECT
     ON a.user_id = b.user_id
 WHERE b.user_id IS NULL
 GROUP BY a.user_id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot push down this subquery
 DETAIL:  VALUES in multi-shard queries is currently unsupported
 -- same query without LIMIT/OFFSET returns 30 rows
@@ -1844,11 +1949,13 @@ FROM (
 ) q
 ORDER BY 2 DESC, 1
 LIMIT 1+1 OFFSET 1::smallint;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 3
  user_id | array_length
 ---------------------------------------------------------------------
-       4 |          184
-       2 |          180
+       4 |          736
+       2 |          720
 (2 rows)
 
 -- now, lets use implicit coersion in LIMIT and a simple expressions on OFFSET
@@ -1868,12 +1975,14 @@ FROM (
 ) q
 ORDER BY 2 DESC, 1
 LIMIT '3' OFFSET 2+1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 6
  user_id | array_length
 ---------------------------------------------------------------------
-       5 |          156
-       6 |           40
-       1 |           28
+       5 |          624
+       6 |          160
+       1 |          112
 (3 rows)
 
 -- create a test function which is marked as volatile
@@ -1898,11 +2007,13 @@ FROM (
 ) q
 ORDER BY 2 DESC, 1
 LIMIT volatile_func_test() + (ROW(1,2,NULL) < ROW(1,3,0))::int OFFSET volatile_func_test() + volatile_func_test();
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 4
  user_id | array_length
 ---------------------------------------------------------------------
-       3 |          340
-       5 |          312
+       3 |         1360
+       5 |         1248
 (2 rows)
 
 -- now, lets use expressions on both the LIMIT and OFFSET
@@ -1927,10 +2038,12 @@ LIMIT (5 > 4)::int OFFSET
                       WHEN 1 > 5 THEN 28
                       ELSE 2
                   END;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 3
  user_id | array_length
 ---------------------------------------------------------------------
-       2 |          180
+       2 |          720
 (1 row)
 
 -- we don't allow parameters on the LIMIT/OFFSET clauses
@@ -1950,10 +2063,12 @@ FROM (
  ORDER BY 2 DESC, 1
  LIMIT $1 OFFSET $2;
  EXECUTE parametrized_limit(1,1);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 2
  user_id | array_length
 ---------------------------------------------------------------------
-       4 |          184
+       4 |          736
 (1 row)
 
 PREPARE parametrized_offset AS
@@ -1972,10 +2087,12 @@ FROM (
  ORDER BY 2 DESC, 1
  LIMIT 1 OFFSET $1;
  EXECUTE parametrized_offset(1);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 2
  user_id | array_length
 ---------------------------------------------------------------------
-       4 |          184
+       4 |          736
 (1 row)
 
 SET client_min_messages TO DEFAULT;
@@ -2013,6 +2130,8 @@ FROM (
   GROUP BY user_id
 ) q
 ORDER BY 2 DESC, 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- note that the following query has both equi-joins on the partition keys
 -- and non-equi-joins on other columns. We now support query filters
@@ -2032,6 +2151,8 @@ FROM
   ON users_table.user_id = temp.user_id
   WHERE
     users_table.value_1 < 3 AND test_join_function_2(users_table.user_id, temp.user_id);
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
  user_id | value_1 | prob
 ---------------------------------------------------------------------
 (0 rows)
@@ -2056,6 +2177,8 @@ FROM
     users_table.value_1 < 3
   ORDER BY 2 DESC, 1 DESC
   LIMIT 10;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  user_id | value_1 |          prob
 ---------------------------------------------------------------------
        6 |       2 | 0.50000000000000000000
@@ -2067,7 +2190,7 @@ FROM
        6 |       2 | 0.50000000000000000000
        6 |       2 | 0.50000000000000000000
        6 |       2 | 0.50000000000000000000
-       5 |       2 | 0.50000000000000000000
+       6 |       2 | 0.50000000000000000000
 (10 rows)
 
 -- similarly we do support non equi joins on columns if there is aready
@@ -2084,9 +2207,11 @@ FROM
     events_table.time > users_table.time AND
     events_table.value_2 IN (0, 4)
   ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
-   180
+   720
 (1 row)
 
 -- the other way around is not supported
@@ -2102,6 +2227,8 @@ FROM
     events_table.time = users_table.time AND
     events_table.value_2 IN (0, 4)
   ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- we can even allow that on top level joins
 SELECT
@@ -2125,9 +2252,11 @@ FROM
   ) as bar
 WHERE foo.event_type > bar.event_type
 AND foo.user_id = bar.user_id;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
- 11971
+ 191536
 (1 row)
 
 -- note that the following is not supported
@@ -2152,6 +2281,8 @@ FROM
     events_table.value_2 IN (1, 5)
   ) as bar
 WHERE foo.event_type = bar.event_type;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 3
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- DISTINCT in the outer query and DISTINCT in the subquery
 SELECT
@@ -2170,6 +2301,8 @@ FROM
   WHERE temp.value_1 < 3
   ORDER BY 1
   LIMIT 5;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
  user_id
 ---------------------------------------------------------------------
        1
@@ -2196,6 +2329,8 @@ FROM
   WHERE temp.value_1 < 3
   ORDER BY 1, 2
   LIMIT 5;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
  user_id | value_1 |          prob
 ---------------------------------------------------------------------
        1 |       1 | 0.50000000000000000000
@@ -2221,6 +2356,8 @@ FROM
   ON users_ids.user_id = temp.user_id
   ORDER BY 1,2
   LIMIT 5;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
  user_id | value_1 |          prob
 ---------------------------------------------------------------------
        1 |       1 | 0.50000000000000000000
@@ -2246,6 +2383,8 @@ FROM
   GROUP BY
     1
   ) AS temp;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count | avg
 ---------------------------------------------------------------------
      6 |
@@ -2277,9 +2416,11 @@ LATERAL (
 ) b
 ORDER BY user_id, value_2, cnt
 LIMIT 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | value_2 | cnt
 ---------------------------------------------------------------------
-       2 |       0 |   1
+       2 |       0 |   2
 (1 row)
 
 DROP FUNCTION test_join_function_2(integer, integer);

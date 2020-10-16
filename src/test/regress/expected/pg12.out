@@ -39,20 +39,26 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$test_pg12.gen1$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 select create_distributed_table('gen2', 'val2');
 ERROR:  cannot distribute relation: gen2
 DETAIL:  Distribution column must not use GENERATED ALWAYS AS (...) STORED.
 copy gen1 to :'temp_dir''pg12_copy_test_generated';
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 insert into gen1 (id, val1) values (2,4),(4,6),(6,2),(8,2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 insert into gen2 (id, val1) values (2,4),(4,6),(6,2),(8,2);
 select * from gen1 order by 1,2,3;
- id | val2 | val1
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ id | val2 | val1 
+----+------+------
   1 |    6 |    4
   2 |    6 |    4
   3 |    8 |    6
@@ -64,8 +70,8 @@ select * from gen1 order by 1,2,3;
 (8 rows)
 
 select * from gen2 order by 1,2,3;
- id | val1 | val2
----------------------------------------------------------------------
+ id | val1 | val2 
+----+------+------
   1 |    4 |    6
   2 |    4 |    6
   3 |    6 |    8
@@ -79,8 +85,10 @@ select * from gen2 order by 1,2,3;
 truncate gen1;
 copy gen1 from :'temp_dir''pg12_copy_test_generated';
 select * from gen1 order by 1,2,3;
- id | val2 | val1
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ id | val2 | val1 
+----+------+------
   1 |    6 |    4
   3 |    8 |    6
   5 |    4 |    2
@@ -95,9 +103,9 @@ vacuum (index_cleanup 1) gen1;
 -- COPY FROM
 create table cptest (id int, val int);
 select create_distributed_table('cptest', 'id');
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 copy cptest from STDIN with csv where val < 4;
@@ -111,27 +119,33 @@ ERROR:  Citus does not support COPY FROM with WHERE
 invalid command \.
 select sum(id), sum(val) from cptest;
 ERROR:  syntax error at or near "1"
+LINE 1: 1,6
+        ^
 -- CTE materialized/not materialized
 CREATE TABLE single_hash_repartition_first (id int, sum int, avg float);
 CREATE TABLE single_hash_repartition_second (id int primary key, sum int, avg float);
 SELECT create_distributed_table('single_hash_repartition_first', 'id');
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 SELECT create_distributed_table('single_hash_repartition_second', 'id');
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 INSERT INTO single_hash_repartition_first
 SELECT i, i * 3, i * 0.3
 FROM generate_series(0, 100) i;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO single_hash_repartition_second
 SELECT i * 2, i * 5, i * 0.6
 FROM generate_series(0, 100) i;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- a sample router query with NOT MATERIALIZED
 -- which pushes down the filters to the CTE
 SELECT public.coordinator_plan($Q$
@@ -145,8 +159,12 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.id = 45;
 $Q$);
-       coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+       coordinator_plan       
+------------------------------
  Custom Scan (Citus Adaptive)
    Task Count: 1
 (2 rows)
@@ -164,8 +182,12 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.id = 45;
 $Q$);
-       coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+       coordinator_plan       
+------------------------------
  Custom Scan (Citus Adaptive)
    Task Count: 1
 (2 rows)
@@ -184,10 +206,18 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.id = 45;
 $Q$);
-             coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+             coordinator_plan             
+------------------------------------------
  Custom Scan (Citus Adaptive)
-   ->  Distributed Subplan XXX_1
+   ->  Distributed Subplan 11_1
          ->  Custom Scan (Citus Adaptive)
                Task Count: 4
 (4 rows)
@@ -207,8 +237,12 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.id = 45;
 $Q$);
-       coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+       coordinator_plan       
+------------------------------
  Custom Scan (Citus Adaptive)
    Task Count: 1
 (2 rows)
@@ -228,11 +262,19 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.sum = 45;
 $Q$);
-                coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+                coordinator_plan                
+------------------------------------------------
  Aggregate
    ->  Custom Scan (Citus Adaptive)
-         ->  Distributed Subplan XXX_1
+         ->  Distributed Subplan 14_1
                ->  Custom Scan (Citus Adaptive)
                      Task Count: 4
 (5 rows)
@@ -249,8 +291,12 @@ SELECT count(*)
 FROM cte1, single_hash_repartition_second
 WHERE cte1.id = single_hash_repartition_second.id AND single_hash_repartition_second.sum = 45;
 $Q$);
-          coordinator_plan
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 1
+CONTEXT:  PL/pgSQL function public.coordinator_plan(text) line 3 at FOR over EXECUTE statement
+          coordinator_plan          
+------------------------------------
  Aggregate
    ->  Custom Scan (Citus Adaptive)
          Task Count: 4
@@ -285,9 +331,9 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$test_pg12.collections_list_0$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 SELECT create_distributed_table('collection_users', 'key');
@@ -295,19 +341,25 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$test_pg12.collection_users$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 -- should still fail because of fkey
 INSERT INTO collection_users VALUES (1, 1000, 1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  insert or update on table "collection_users_60028" violates foreign key constraint "collection_users_fkey_60028"
 DETAIL:  Key (key, collection_id)=(1, 1000) is not present in table "collections_list_60016".
-CONTEXT:  while executing command on localhost:xxxxx
+CONTEXT:  while executing command on localhost:57637
 -- whereas new record with partition should go through
 INSERT INTO collections_list VALUES (2, 1, '1.2');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO collection_users VALUES (5, 1, 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- AND CHAIN
 CREATE TABLE test (x int, y int);
 INSERT INTO test (x,y) SELECT i,i*3 from generate_series(1, 100) i;
@@ -316,28 +368,36 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$test_pg12.test$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 -- single shard queries with CHAIN
 BEGIN;
 UPDATE test SET y = 15 WHERE x = 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 COMMIT AND CHAIN;
 SELECT * FROM test WHERE x = 1;
- x | y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ x | y  
+---+----
  1 | 15
 (1 row)
 
 COMMIT;
 BEGIN;
 UPDATE test SET y = 20 WHERE x = 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ROLLBACK AND CHAIN;
 SELECT * FROM test WHERE x = 1;
- x | y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ x | y  
+---+----
  1 | 15
 (1 row)
 
@@ -345,20 +405,28 @@ COMMIT;
 -- multi shard queries with CHAIN
 BEGIN;
 UPDATE test SET y = 25;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 COMMIT AND CHAIN;
 SELECT DISTINCT y FROM test;
- y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ y  
+----
  25
 (1 row)
 
 COMMIT;
 BEGIN;
 UPDATE test SET y = 30;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ROLLBACK AND CHAIN;
 SELECT DISTINCT y FROM test;
- y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ y  
+----
  25
 (1 row)
 
@@ -367,22 +435,30 @@ COMMIT;
 BEGIN READ ONLY;
 COMMIT AND CHAIN;
 UPDATE test SET y = 35;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot execute UPDATE in a read-only transaction
 COMMIT;
 SELECT DISTINCT y FROM test;
- y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ y  
+----
  25
 (1 row)
 
 BEGIN READ ONLY;
 ROLLBACK AND CHAIN;
 UPDATE test SET y = 40;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot execute UPDATE in a read-only transaction
 COMMIT;
 SELECT DISTINCT y FROM test;
- y
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ y  
+----
  25
 (1 row)
 
@@ -406,18 +482,22 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$test_pg12.col_test$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 insert into col_test values
 	(4, 'vALue'), (5, 'AsDf'), (6, 'value');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 select count(*)
 from col_test
 where val = 'asdf';
- count
----------------------------------------------------------------------
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+ count 
+-------
      3
 (1 row)
 

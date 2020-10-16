@@ -36,24 +36,40 @@ CREATE FUNCTION sql_test_no_4() RETURNS bigint AS '
 SET client_min_messages TO INFO;
 -- now, run plain SQL functions
 SELECT sql_test_no_1();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "sql_test_no_1" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "sql_test_no_1" during startup
  sql_test_no_1
 ---------------------------------------------------------------------
           2985
 (1 row)
 
 SELECT sql_test_no_2();
+WARNING:  list_length before removal: 2
+CONTEXT:  SQL function "sql_test_no_2" during startup
+WARNING:  list_length after removal: 1
+CONTEXT:  SQL function "sql_test_no_2" during startup
  sql_test_no_2
 ---------------------------------------------------------------------
          12000
 (1 row)
 
 SELECT sql_test_no_3();
+WARNING:  list_length before removal: 2
+CONTEXT:  SQL function "sql_test_no_3" during startup
+WARNING:  list_length after removal: 1
+CONTEXT:  SQL function "sql_test_no_3" during startup
  sql_test_no_3
 ---------------------------------------------------------------------
           1956
 (1 row)
 
 SELECT sql_test_no_4();
+WARNING:  list_length before removal: 8
+CONTEXT:  SQL function "sql_test_no_4" during startup
+WARNING:  list_length after removal: 2
+CONTEXT:  SQL function "sql_test_no_4" during startup
  sql_test_no_4
 ---------------------------------------------------------------------
           7806
@@ -63,12 +79,20 @@ SELECT sql_test_no_4();
 -- with real-time executor
 -- now, run plain SQL functions
 SELECT sql_test_no_1();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "sql_test_no_1" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "sql_test_no_1" during startup
  sql_test_no_1
 ---------------------------------------------------------------------
           2985
 (1 row)
 
 SELECT sql_test_no_2();
+WARNING:  list_length before removal: 2
+CONTEXT:  SQL function "sql_test_no_2" during startup
+WARNING:  list_length after removal: 1
+CONTEXT:  SQL function "sql_test_no_2" during startup
  sql_test_no_2
 ---------------------------------------------------------------------
          12000
@@ -91,36 +115,60 @@ CREATE FUNCTION no_parameter_insert_sql() RETURNS void AS $$
 $$ LANGUAGE SQL;
 -- execute 6 times
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT no_parameter_insert_sql();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "no_parameter_insert_sql" during startup
  no_parameter_insert_sql
 ---------------------------------------------------------------------
 
@@ -131,36 +179,60 @@ CREATE FUNCTION non_partition_parameter_insert_sql(int) RETURNS void AS $$
 $$ LANGUAGE SQL;
 -- execute 6 times
 SELECT non_partition_parameter_insert_sql(10);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_insert_sql(20);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_insert_sql(30);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_insert_sql(40);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_insert_sql(50);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_insert_sql(60);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_insert_sql" during startup
  non_partition_parameter_insert_sql
 ---------------------------------------------------------------------
 
@@ -168,6 +240,8 @@ SELECT non_partition_parameter_insert_sql(60);
 
 -- check inserted values
 SELECT * FROM temp_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -190,36 +264,60 @@ CREATE FUNCTION non_partition_parameter_update_sql(int, int) RETURNS void AS $$
 $$ LANGUAGE SQL;
 -- execute 6 times
 SELECT non_partition_parameter_update_sql(10, 12);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_update_sql(20, 22);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_update_sql(30, 32);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_update_sql(40, 42);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_update_sql(50, 52);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_update_sql(60, 62);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_update_sql" during startup
  non_partition_parameter_update_sql
 ---------------------------------------------------------------------
 
@@ -227,6 +325,8 @@ SELECT non_partition_parameter_update_sql(60, 62);
 
 -- check after updates
 SELECT * FROM temp_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    12
@@ -249,36 +349,60 @@ CREATE FUNCTION non_partition_parameter_delete_sql(int) RETURNS void AS $$
 $$ LANGUAGE SQL;
 -- execute 6 times to trigger prepared statement usage
 SELECT non_partition_parameter_delete_sql(12);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_delete_sql(22);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_delete_sql(32);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_delete_sql(42);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_delete_sql(52);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
 (1 row)
 
 SELECT non_partition_parameter_delete_sql(62);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "non_partition_parameter_delete_sql" during startup
  non_partition_parameter_delete_sql
 ---------------------------------------------------------------------
 
@@ -286,6 +410,8 @@ SELECT non_partition_parameter_delete_sql(62);
 
 -- check after deletes
 SELECT * FROM temp_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |
@@ -316,11 +442,17 @@ AS $$
     org_id IN (SELECT org_id FROM test_parameterized_sql as t2 WHERE t2.org_id = t1.org_id AND org_id = org_id_val);
 $$ LANGUAGE SQL STABLE;
 INSERT INTO test_parameterized_sql VALUES(1, 1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- all of them should fail
 SELECT * FROM test_parameterized_sql_function(1);
 ERROR:  cannot perform distributed planning on this query because parameterized queries for SQL functions referencing distributed tables are not supported
 HINT:  Consider using PL/pgSQL functions instead.
 SELECT test_parameterized_sql_function_in_subquery_where(1);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "test_parameterized_sql_function_in_subquery_where" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "test_parameterized_sql_function_in_subquery_where" during startup
 ERROR:  could not create distributed plan
 DETAIL:  Possibly this is caused by the use of parameters in SQL functions, which is not supported in Citus.
 HINT:  Consider using PL/pgSQL functions instead.
@@ -328,6 +460,10 @@ CONTEXT:  SQL function "test_parameterized_sql_function_in_subquery_where" state
 -- postgres behaves slightly differently for the following
 -- query where the target list is empty
 SELECT test_parameterized_sql_function(1);
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "test_parameterized_sql_function" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "test_parameterized_sql_function" during startup
  test_parameterized_sql_function
 ---------------------------------------------------------------------
                                1
@@ -344,17 +480,29 @@ SELECT create_distributed_table('table_with_unique_constraint', 'a');
 (1 row)
 
 INSERT INTO table_with_unique_constraint VALUES (1), (2), (3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE OR REPLACE FUNCTION insert_twice() RETURNS VOID
 AS $$
   INSERT INTO table_with_unique_constraint VALUES (4);
   INSERT INTO table_with_unique_constraint VALUES (4);
 $$ LANGUAGE SQL;
 SELECT insert_twice();
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "insert_twice" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "insert_twice" during startup
+WARNING:  list_length before removal: 0
+CONTEXT:  SQL function "insert_twice" during startup
+WARNING:  list_length after removal: 0
+CONTEXT:  SQL function "insert_twice" during startup
 ERROR:  duplicate key value violates unique constraint "table_with_unique_constraint_a_key_1230009"
 DETAIL:  Key (a)=(4) already exists.
 CONTEXT:  while executing command on localhost:xxxxx
 SQL function "insert_twice" statement 2
 SELECT * FROM table_with_unique_constraint ORDER BY a;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  a
 ---------------------------------------------------------------------
  1

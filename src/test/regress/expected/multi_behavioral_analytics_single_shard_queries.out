@@ -20,8 +20,12 @@ FROM (
   GROUP BY user_id
 ) q
 WHERE user_id = 2;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
      1 |     1 | 2.0000000000000000
@@ -49,8 +53,12 @@ FROM (
   GROUP BY user_id
 ) q
 WHERE (user_id = 1 OR user_id = 2);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
      2 |     2 | 1.5000000000000000
@@ -100,6 +108,10 @@ FROM (
   WHERE t1.user_id = 2
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 --  Funnel grouped by whether or not a user has done an event -- two shards query
@@ -142,8 +154,14 @@ FROM (
   WHERE (t1.user_id = 2 OR t1.user_id = 1)
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
      1 |     1 | 2.0000000000000000
@@ -184,8 +202,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
      1 |     1 | 5.0000000000000000
@@ -227,8 +249,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
      2 |     2 | 3.0000000000000000
@@ -247,8 +273,12 @@ WHERE user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 1 AND value_1
     AND user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 3 AND value_1 <= 4)
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 5 AND value_1 <= 6)
     AND user_id = 1;
+WARNING:  list_length before removal: 36
+WARNING:  list_length after removal: 3
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |          avg
 ---------------------------------------------------------------------
      1 |     1 | 1.00000000000000000000
@@ -267,8 +297,12 @@ WHERE user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 1 AND value_1
     AND user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 3 AND value_1 <= 4 AND (user_id = 1 OR user_id = 2))
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 5 AND value_1 <= 6 AND (user_id = 1 OR user_id = 2))
     AND (user_id = 1 OR user_id = 2);
+WARNING:  list_length before removal: 36
+WARNING:  list_length after removal: 9
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |          avg
 ---------------------------------------------------------------------
      1 |     1 | 1.00000000000000000000
@@ -286,11 +320,15 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND value_2 >= 1
   AND EXISTS (SELECT user_id FROM events_table WHERE event_type>1  AND event_type < 3 AND value_3 > 1 AND user_id=users_table.user_id)
   AND user_id = 2;
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
-     7 |     1 | 2.0000000000000000
+    14 |     1 | 2.0000000000000000
 (1 row)
 
 ---------------------------------------------------------------------
@@ -305,11 +343,15 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND value_2 >= 1
   AND EXISTS (SELECT user_id FROM events_table WHERE event_type>0  AND event_type < 2 AND value_3 > 1 AND (user_id = 2 OR user_id = 1) AND user_id=users_table.user_id)
   AND (user_id = 2 OR user_id = 1);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
-    10 |     2 | 1.7000000000000000
+    20 |     2 | 1.7000000000000000
 (1 row)
 
 ---------------------------------------------------------------------
@@ -324,11 +366,15 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND user_id = 1
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type > 1 AND event_type <= 3 AND value_3 > 1 AND user_id=users_table.user_id)
   AND  NOT EXISTS (SELECT user_id FROM events_table WHERE event_type > 4 AND event_type <= 5 AND value_3 > 4 AND user_id=users_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |          avg
 ---------------------------------------------------------------------
-     6 |     1 | 1.00000000000000000000
+    12 |     1 | 1.00000000000000000000
 (1 row)
 
 ---------------------------------------------------------------------
@@ -343,11 +389,15 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND (user_id = 1 OR user_id = 2)
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type > 1 AND event_type <= 3 AND value_3 > 1 AND user_id=users_table.user_id AND (user_id = 1 OR user_id = 2))
   AND  NOT EXISTS (SELECT user_id FROM events_table WHERE event_type > 4 AND event_type <= 5 AND value_3 > 4 AND user_id=users_table.user_id AND (user_id = 1 OR user_id = 2));
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
-    20 |     2 | 1.7000000000000000
+    40 |     2 | 1.7000000000000000
 (1 row)
 
 ---------------------------------------------------------------------
@@ -373,11 +423,15 @@ INSERT INTO agg_results_second(user_id, value_2_agg)
                             AND user_id = 3
                      GROUP  BY user_id
                      HAVING Count(*) > 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
-     2 |     1 | 3.0000000000000000
+     4 |     1 | 3.0000000000000000
 (1 row)
 
 ---------------------------------------------------------------------
@@ -402,10 +456,14 @@ INSERT INTO agg_results_second(user_id, value_2_agg)
                             AND (user_id = 3 or user_id = 4)
                      GROUP  BY user_id
                      HAVING Count(*) > 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- get some statistics from the aggregated results to ensure the results are correct
 SELECT count(*), count(DISTINCT user_id), avg(user_id) FROM agg_results_second;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count | count |        avg
 ---------------------------------------------------------------------
-     4 |     2 | 3.5000000000000000
+     8 |     2 | 3.5000000000000000
 (1 row)
 

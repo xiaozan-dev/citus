@@ -19,6 +19,12 @@ FROM (
   ) t
   GROUP BY user_id
 ) q;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -64,6 +70,12 @@ FROM (
   ) t2 ON (t1.user_id = t2.user_id)
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- not pushable since the JOIN is not an equi join right part of the UNION
 -- is not joined on the partition key
@@ -104,6 +116,12 @@ FROM (
   ) t2 ON (t1.user_id = t2.user_id)
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  the query contains a join that requires repartitioning
 HINT:  Set citus.enable_repartition_joins to on to enable repartitioning
 -- the LEFT JOIN conditon is not on the partition column (i.e., is it part_key divided by 2)
@@ -146,11 +164,23 @@ FROM (
   ) t2 ON (t1.user_id = (t2.user_id)/2)
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
 DEBUG:  Set operations are not allowed in distributed INSERT ... SELECT queries
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan XXX_1 for subquery SELECT u.user_id, 'step=>1'::text AS event, e."time" FROM public.users_table u, public.events_table e WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.>=) 10) AND (u.user_id OPERATOR(pg_catalog.<=) 25) AND (e.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[100, 101, 102])))
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan XXX_2 for subquery SELECT u.user_id, 'step=>2'::text AS event, e."time" FROM public.users_table u, public.events_table e WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.>=) 10) AND (u.user_id OPERATOR(pg_catalog.<=) 25) AND (e.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[103, 104, 105])))
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT intermediate_result.user_id, intermediate_result.event, intermediate_result."time" FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, event text, "time" timestamp without time zone) UNION SELECT intermediate_result.user_id, intermediate_result.event, intermediate_result."time" FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, event text, "time" timestamp without time zone)
 DEBUG:  generating subplan XXX_1 for subquery SELECT u.user_id, 'step=>1'::text AS event, e."time" FROM public.users_table u, public.events_table e WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.>=) 10) AND (u.user_id OPERATOR(pg_catalog.<=) 25) AND (e.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[100, 101, 102]))) UNION SELECT u.user_id, 'step=>2'::text AS event, e."time" FROM public.users_table u, public.events_table e WHERE ((u.user_id OPERATOR(pg_catalog.=) e.user_id) AND (u.user_id OPERATOR(pg_catalog.>=) 10) AND (u.user_id OPERATOR(pg_catalog.<=) 25) AND (e.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[103, 104, 105])))
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  Complex subqueries and CTEs cannot be in the outer part of the outer join
 RESET client_min_messages;
@@ -226,6 +256,12 @@ GROUP BY
   count_pay, user_id
 ORDER BY
   count_pay;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- not pushable since the JOIN condition is not equi JOIN
 -- (subquery_1 JOIN subquery_2)
@@ -296,11 +332,23 @@ GROUP BY
   count_pay, user_id
 ORDER BY
   count_pay;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
 DEBUG:  Set operations are not allowed in distributed INSERT ... SELECT queries
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan XXX_1 for subquery SELECT users_table.user_id, 'action=>1'::text AS event, events_table."time" FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (users_table.user_id OPERATOR(pg_catalog.>=) 10) AND (users_table.user_id OPERATOR(pg_catalog.<=) 70) AND (events_table.event_type OPERATOR(pg_catalog.>) 10) AND (events_table.event_type OPERATOR(pg_catalog.<) 12))
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  generating subplan XXX_2 for subquery SELECT users_table.user_id, 'action=>2'::text AS event, events_table."time" FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (users_table.user_id OPERATOR(pg_catalog.>=) 10) AND (users_table.user_id OPERATOR(pg_catalog.<=) 70) AND (events_table.event_type OPERATOR(pg_catalog.>) 12) AND (events_table.event_type OPERATOR(pg_catalog.<) 14))
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT intermediate_result.user_id, intermediate_result.event, intermediate_result."time" FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, event text, "time" timestamp without time zone) UNION SELECT intermediate_result.user_id, intermediate_result.event, intermediate_result."time" FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, event text, "time" timestamp without time zone)
 DEBUG:  generating subplan XXX_1 for subquery SELECT users_table.user_id, 'action=>1'::text AS event, events_table."time" FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (users_table.user_id OPERATOR(pg_catalog.>=) 10) AND (users_table.user_id OPERATOR(pg_catalog.<=) 70) AND (events_table.event_type OPERATOR(pg_catalog.>) 10) AND (events_table.event_type OPERATOR(pg_catalog.<) 12)) UNION SELECT users_table.user_id, 'action=>2'::text AS event, events_table."time" FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (users_table.user_id OPERATOR(pg_catalog.>=) 10) AND (users_table.user_id OPERATOR(pg_catalog.<=) 70) AND (events_table.event_type OPERATOR(pg_catalog.>) 12) AND (events_table.event_type OPERATOR(pg_catalog.<) 14))
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  Complex subqueries and CTEs cannot be in the outer part of the outer join
 RESET client_min_messages;
@@ -338,6 +386,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since lateral join is not on the partition key
 INSERT INTO agg_results_third (user_id, agg_time, value_2_agg)
@@ -366,6 +420,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since lateral join is not on the partition key
 INSERT INTO agg_results_third (user_id, agg_time, value_2_agg)
@@ -394,6 +454,12 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -410,6 +476,26 @@ WHERE user_id NOT IN (SELECT user_id FROM users_table WHERE value_1 >= 10 AND va
     AND user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 30 AND value_1 <= 40)
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 50 AND value_1 <= 60);
 $Q$);
+WARNING:  list_length before removal: 12
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 6
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 12
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 6
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 12
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 6
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                    coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -433,6 +519,26 @@ WHERE user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 10 AND value_
     AND user_id IN (SELECT value_1 FROM users_table WHERE value_1 >= 30 AND value_1 <= 40)
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 50 AND value_1 <= 60);
 $Q$);
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                    coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -456,6 +562,26 @@ WHERE user_id IN (SELECT user_id FROM users_table WHERE value_1 >= 10 AND value_
     AND user_id IN (SELECT 3 * user_id FROM users_table WHERE value_1 >= 30 AND value_1 <= 40)
     AND user_id IN (SELECT user_id FROM users_table WHERE  value_1 >= 50 AND value_1 <= 60);
 $Q$);
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 36
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 9
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                    coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -479,6 +605,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   value_1 > 101 AND value_1 < 110
   AND value_2 >= 5
   AND EXISTS (SELECT user_id FROM events_table WHERE event_type>101  AND event_type < 110 AND value_3 > 100 AND user_id!=users_table.user_id);
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since the join is not on the partition key
 INSERT INTO agg_results_third(user_id, value_2_agg)
@@ -486,6 +616,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   value_1 > 101 AND value_1 < 110
   AND value_2 >= 5
   AND EXISTS (SELECT user_id FROM events_table WHERE event_type>101  AND event_type < 110 AND value_3 > 100 AND event_type = users_table.user_id);
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 3
+WARNING:  list_length after removal: 3
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -498,6 +632,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   value_1 = 101
   AND value_2 >= 5
   AND NOT EXISTS (SELECT user_id FROM events_table WHERE event_type=101 AND value_3 > 100 AND user_id!=users_table.user_id);
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since the join is not the partition key
 INSERT INTO agg_results_third(user_id, value_2_agg)
@@ -505,6 +643,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   value_1 = 101
   AND value_2 >= 5
   AND NOT EXISTS (SELECT user_id FROM events_table WHERE event_type=101 AND value_3 > 100 AND event_type=users_table.user_id);
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -518,6 +660,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   AND value_2 >= 5
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type!=100 AND value_3 > 100 AND user_id=users_table.user_id)
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type=101 AND value_3 > 100 AND user_id!=users_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -530,6 +676,10 @@ SELECT user_id, value_2 FROM users_table WHERE
   value_2 >= 5
   AND  EXISTS (SELECT user_id FROM events_table WHERE event_type > 100 AND event_type <= 300 AND value_3 > 100 AND user_id!=users_table.user_id)
   AND  NOT EXISTS (SELECT user_id FROM events_table WHERE event_type > 300 AND event_type <= 350  AND value_3 > 100 AND user_id=users_table.user_id);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -552,6 +702,10 @@ INSERT INTO agg_results_third(user_id, value_2_agg)
                             AND user_id != users_table.user_id
                      GROUP  BY user_id
                      HAVING Count(*) > 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since the second join is not on the partition key
 INSERT INTO agg_results_third(user_id, value_2_agg)
@@ -569,6 +723,10 @@ INSERT INTO agg_results_third(user_id, value_2_agg)
                             AND event_type = users_table.user_id
                      GROUP  BY user_id
                      HAVING Count(*) > 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- not pushable since the second join is not on the partition key
 INSERT INTO agg_results_third(user_id, value_2_agg)
@@ -586,6 +744,10 @@ INSERT INTO agg_results_third(user_id, value_2_agg)
                             AND user_id = users_table.value_1
                      GROUP  BY user_id
                      HAVING Count(*) > 2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
@@ -606,6 +768,26 @@ And user_id NOT in
    Where value_1 = 15
    And value_2 > 25);
 $Q$);
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                 coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -631,6 +813,26 @@ And user_id  in
    Where value_1 = 15
    And value_2 > 25);
 $Q$);
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                 coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -656,6 +858,26 @@ And event_type  in
    Where value_1 = 15
    And value_2 > 25);
 $Q$);
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                 coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -679,6 +901,26 @@ SELECT user_id, event_type FROM events_table
 WHERE user_id NOT IN (SELECT user_id from events_table WHERE event_type > 500 and event_type < 505)
 GROUP BY user_id, event_type;
 $Q$);
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                         coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -699,6 +941,26 @@ SELECT user_id, event_type FROM events_table
 WHERE user_id IN (SELECT value_2 from events_table WHERE event_type > 500 and event_type < 505)
 GROUP BY user_id, event_type;
 $Q$);
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                         coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -720,6 +982,26 @@ SELECT user_id, event_type FROM events_table
 WHERE event_type IN (SELECT user_id from events_table WHERE event_type > 500 and event_type < 505)
 GROUP BY user_id, event_type;
 $Q$);
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 3
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length before removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
+WARNING:  list_length after removal: 0
+CONTEXT:  PL/pgSQL function coordinator_plan(text) line 3 at FOR over EXECUTE statement
                         coordinator_plan
 ---------------------------------------------------------------------
  Custom Scan (Citus INSERT ... SELECT)
@@ -753,6 +1035,12 @@ FROM
     ) temp
   ON users_table.user_id = temp.user_id
   WHERE users_table.value_1 < 50;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- not pushable since the join is not on the partition key
 INSERT INTO agg_results_third(user_id, value_1_agg, value_3_agg)
@@ -770,6 +1058,12 @@ FROM
     ) temp
   ON users_table.user_id = temp.user_id
   WHERE users_table.value_1 < 50;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  the query contains a join that requires repartitioning
 HINT:  Set citus.enable_repartition_joins to on to enable repartitioning
 -- supported via recursive planning
@@ -798,3 +1092,7 @@ FROM (
         GROUP BY user_id
 ) AS shard_union
 ORDER BY user_lastseen DESC;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3

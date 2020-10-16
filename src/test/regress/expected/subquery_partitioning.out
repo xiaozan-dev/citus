@@ -4,7 +4,11 @@
 CREATE SCHEMA subquery_and_partitioning;
 SET search_path TO subquery_and_partitioning, public;
 CREATE TABLE users_table_local AS SELECT * FROM users_table;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE TABLE events_table_local AS SELECT * FROM events_table;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE TABLE partitioning_test(id int, value_1 int, time date) PARTITION BY RANGE (time);
 -- create its partitions
 CREATE TABLE partitioning_test_2017 PARTITION OF partitioning_test FOR VALUES FROM ('2017-01-01') TO ('2018-01-01');
@@ -25,9 +29,9 @@ NOTICE:  Copying data from local table...
 NOTICE:  copying the data has completed
 DETAIL:  The local data in the table is no longer visible, but is still on disk.
 HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$subquery_and_partitioning.partitioning_test_2017$$)
- create_distributed_table
----------------------------------------------------------------------
-
+ create_distributed_table 
+--------------------------
+ 
 (1 row)
 
 SET client_min_messages TO DEBUG1;
@@ -42,11 +46,15 @@ FROM
      LIMIT 5
      ) as foo
     ORDER BY 1 DESC;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT id FROM (SELECT intermediate_result.id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) foo ORDER BY id DESC
- id
----------------------------------------------------------------------
+DEBUG:  generating subplan 3_1 for subquery SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test LIMIT 5
+DEBUG:  Plan 3 query after replacing subqueries and CTEs: SELECT id FROM (SELECT intermediate_result.id FROM read_intermediate_result('3_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) foo ORDER BY id DESC
+ id 
+----
   4
   3
   2
@@ -71,13 +79,19 @@ FROM
      ) as bar
 	WHERE foo.id = date_part('day', bar.time)
 	ORDER BY 2 DESC, 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test LIMIT 5
+DEBUG:  generating subplan 5_1 for subquery SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test LIMIT 5
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_2 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT foo.id, bar."time" FROM (SELECT intermediate_result.id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) foo, (SELECT intermediate_result."time" FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) bar WHERE ((foo.id)::double precision OPERATOR(pg_catalog.=) date_part('day'::text, bar."time")) ORDER BY bar."time" DESC, foo.id
- id |    time
----------------------------------------------------------------------
+DEBUG:  generating subplan 5_2 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test LIMIT 5
+DEBUG:  Plan 5 query after replacing subqueries and CTEs: SELECT foo.id, bar."time" FROM (SELECT intermediate_result.id FROM read_intermediate_result('5_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) foo, (SELECT intermediate_result."time" FROM read_intermediate_result('5_2'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) bar WHERE ((foo.id)::double precision OPERATOR(pg_catalog.=) date_part('day'::text, bar."time")) ORDER BY bar."time" DESC, foo.id
+ id |    time    
+----+------------
   3 | 03-03-2010
 (1 row)
 
@@ -101,12 +115,16 @@ FROM
 	WHERE  date_part('day', foo.time) = bar.id
 	ORDER BY 2 DESC, 1 DESC
 	LIMIT 3;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test ORDER BY "time" DESC LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT foo."time", bar.id FROM (SELECT intermediate_result."time" FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) foo, (SELECT DISTINCT partitioning_test.id FROM subquery_and_partitioning.partitioning_test) bar WHERE (date_part('day'::text, foo."time") OPERATOR(pg_catalog.=) (bar.id)::double precision) ORDER BY bar.id DESC, foo."time" DESC LIMIT 3
+DEBUG:  generating subplan 8_1 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test ORDER BY "time" DESC LIMIT 5
+DEBUG:  Plan 8 query after replacing subqueries and CTEs: SELECT foo."time", bar.id FROM (SELECT intermediate_result."time" FROM read_intermediate_result('8_1'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) foo, (SELECT DISTINCT partitioning_test.id FROM subquery_and_partitioning.partitioning_test) bar WHERE (date_part('day'::text, foo."time") OPERATOR(pg_catalog.=) (bar.id)::double precision) ORDER BY bar.id DESC, foo."time" DESC LIMIT 3
 DEBUG:  push down of limit count: 3
-    time    | id
----------------------------------------------------------------------
+    time    | id 
+------------+----
  03-03-2010 |  3
 (1 row)
 
@@ -131,12 +149,16 @@ FROM
 	WHERE  date_part('day', foo.time) = bar.id AND partitioning_test.id = bar.id
 	ORDER BY 2 DESC, 1 DESC
 	LIMIT 3;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test ORDER BY "time" DESC LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT foo."time", bar.id, partitioning_test.id, partitioning_test.value_1, partitioning_test."time" FROM (SELECT intermediate_result."time" FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) foo, (SELECT DISTINCT partitioning_test_1.id FROM subquery_and_partitioning.partitioning_test partitioning_test_1) bar, subquery_and_partitioning.partitioning_test WHERE ((date_part('day'::text, foo."time") OPERATOR(pg_catalog.=) (bar.id)::double precision) AND (partitioning_test.id OPERATOR(pg_catalog.=) bar.id)) ORDER BY bar.id DESC, foo."time" DESC LIMIT 3
+DEBUG:  generating subplan 10_1 for subquery SELECT DISTINCT "time" FROM subquery_and_partitioning.partitioning_test ORDER BY "time" DESC LIMIT 5
+DEBUG:  Plan 10 query after replacing subqueries and CTEs: SELECT foo."time", bar.id, partitioning_test.id, partitioning_test.value_1, partitioning_test."time" FROM (SELECT intermediate_result."time" FROM read_intermediate_result('10_1'::text, 'binary'::citus_copy_format) intermediate_result("time" date)) foo, (SELECT DISTINCT partitioning_test_1.id FROM subquery_and_partitioning.partitioning_test partitioning_test_1) bar, subquery_and_partitioning.partitioning_test WHERE ((date_part('day'::text, foo."time") OPERATOR(pg_catalog.=) (bar.id)::double precision) AND (partitioning_test.id OPERATOR(pg_catalog.=) bar.id)) ORDER BY bar.id DESC, foo."time" DESC LIMIT 3
 DEBUG:  push down of limit count: 3
-    time    | id | id | value_1 |    time
----------------------------------------------------------------------
+    time    | id | id | value_1 |    time    
+------------+----+----+---------+------------
  03-03-2010 |  3 |  3 |       3 | 11-22-2017
 (1 row)
 
@@ -145,10 +167,14 @@ SELECT DISTINCT id
 FROM partitioning_test
 WHERE
 	id IN (SELECT DISTINCT date_part('day', time) FROM partitioning_test);
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT date_part('day'::text, "time") AS date_part FROM subquery_and_partitioning.partitioning_test
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test WHERE ((id)::double precision OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.date_part FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(date_part double precision)))
- id
----------------------------------------------------------------------
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+DEBUG:  generating subplan 12_1 for subquery SELECT DISTINCT date_part('day'::text, "time") AS date_part FROM subquery_and_partitioning.partitioning_test
+DEBUG:  Plan 12 query after replacing subqueries and CTEs: SELECT DISTINCT id FROM subquery_and_partitioning.partitioning_test WHERE ((id)::double precision OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.date_part FROM read_intermediate_result('12_1'::text, 'binary'::citus_copy_format) intermediate_result(date_part double precision)))
+ id 
+----
   3
 (1 row)
 
@@ -164,11 +190,15 @@ FROM
 	SELECT user_id FROM users_table
 ) as bar
 WHERE foo.value_1 = bar.user_id;
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT p1.value_1 FROM subquery_and_partitioning.partitioning_test p1, subquery_and_partitioning.partitioning_test p2 WHERE (p1.id OPERATOR(pg_catalog.=) p2.value_1)
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.value_1 FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer)) foo, (SELECT users_table.user_id FROM public.users_table) bar WHERE (foo.value_1 OPERATOR(pg_catalog.=) bar.user_id)
- count
----------------------------------------------------------------------
-    47
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+DEBUG:  generating subplan 14_1 for subquery SELECT DISTINCT p1.value_1 FROM subquery_and_partitioning.partitioning_test p1, subquery_and_partitioning.partitioning_test p2 WHERE (p1.id OPERATOR(pg_catalog.=) p2.value_1)
+DEBUG:  Plan 14 query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.value_1 FROM read_intermediate_result('14_1'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer)) foo, (SELECT users_table.user_id FROM public.users_table) bar WHERE (foo.value_1 OPERATOR(pg_catalog.=) bar.user_id)
+ count 
+-------
+    94
 (1 row)
 
 SET citus.enable_repartition_joins to OFF;
@@ -215,22 +245,32 @@ LIMIT 5;
 DEBUG:  CTE cte is going to be inlined via distributed planning
 DEBUG:  CTE local_cte is going to be inlined via distributed planning
 DEBUG:  CTE dist_cte is going to be inlined via distributed planning
-DEBUG:  generating subplan XXX_1 for subquery SELECT user_id, "time", value_1, value_2, value_3, value_4 FROM subquery_and_partitioning.users_table_local
+WARNING:  list_length before removal: 56
+WARNING:  list_length after removal: 14
+DEBUG:  generating subplan 17_1 for subquery SELECT user_id, "time", value_1, value_2, value_3, value_4 FROM subquery_and_partitioning.users_table_local
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  push down of limit count: 3
-DEBUG:  generating subplan XXX_2 for subquery SELECT DISTINCT value_1 FROM public.users_table ORDER BY value_1 LIMIT 3
-DEBUG:  generating subplan XXX_3 for subquery SELECT DISTINCT value_1 FROM subquery_and_partitioning.partitioning_test OFFSET 0
+DEBUG:  generating subplan 17_2 for subquery SELECT DISTINCT value_1 FROM public.users_table ORDER BY value_1 LIMIT 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+DEBUG:  generating subplan 17_3 for subquery SELECT DISTINCT value_1 FROM subquery_and_partitioning.partitioning_test OFFSET 0
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_4 for subquery SELECT DISTINCT events_table.user_id FROM subquery_and_partitioning.partitioning_test, public.events_table WHERE ((events_table.user_id OPERATOR(pg_catalog.=) partitioning_test.id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) ORDER BY events_table.user_id DESC LIMIT 5
-DEBUG:  generating subplan XXX_5 for subquery SELECT count(*) AS cnt FROM (SELECT dist_cte.user_id FROM ((SELECT intermediate_result.user_id, intermediate_result."time", intermediate_result.value_1, intermediate_result.value_2, intermediate_result.value_3, intermediate_result.value_4 FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, "time" timestamp without time zone, value_1 integer, value_2 integer, value_3 double precision, value_4 bigint)) local_cte JOIN (SELECT events_table.user_id FROM public.events_table, (SELECT intermediate_result.value_1 FROM read_intermediate_result('XXX_3'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer)) foo_1 WHERE ((events_table.user_id OPERATOR(pg_catalog.=) foo_1.value_1) AND (events_table.user_id OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.value_1 FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer))))) dist_cte ON ((dist_cte.user_id OPERATOR(pg_catalog.=) local_cte.user_id)))) cte, (SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_4'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) foo WHERE (foo.user_id OPERATOR(pg_catalog.=) cte.user_id)
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT cnt, user_id, "time", value_1, value_2, value_3, value_4 FROM (SELECT foo.cnt, users_table.user_id, users_table."time", users_table.value_1, users_table.value_2, users_table.value_3, users_table.value_4 FROM (SELECT intermediate_result.cnt FROM read_intermediate_result('XXX_5'::text, 'binary'::citus_copy_format) intermediate_result(cnt bigint)) foo, public.users_table WHERE (foo.cnt OPERATOR(pg_catalog.>) users_table.value_2)) subquery_and_ctes ORDER BY "time" DESC, cnt DESC, user_id DESC, value_1 DESC LIMIT 5
+DEBUG:  generating subplan 17_4 for subquery SELECT DISTINCT events_table.user_id FROM subquery_and_partitioning.partitioning_test, public.events_table WHERE ((events_table.user_id OPERATOR(pg_catalog.=) partitioning_test.id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) ORDER BY events_table.user_id DESC LIMIT 5
+WARNING:  list_length before removal: 188
+WARNING:  list_length after removal: 24
+DEBUG:  generating subplan 17_5 for subquery SELECT count(*) AS cnt FROM (SELECT dist_cte.user_id FROM ((SELECT intermediate_result.user_id, intermediate_result."time", intermediate_result.value_1, intermediate_result.value_2, intermediate_result.value_3, intermediate_result.value_4 FROM read_intermediate_result('17_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, "time" timestamp without time zone, value_1 integer, value_2 integer, value_3 double precision, value_4 bigint)) local_cte JOIN (SELECT events_table.user_id FROM public.events_table, (SELECT intermediate_result.value_1 FROM read_intermediate_result('17_3'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer)) foo_1 WHERE ((events_table.user_id OPERATOR(pg_catalog.=) foo_1.value_1) AND (events_table.user_id OPERATOR(pg_catalog.=) ANY (SELECT intermediate_result.value_1 FROM read_intermediate_result('17_2'::text, 'binary'::citus_copy_format) intermediate_result(value_1 integer))))) dist_cte ON ((dist_cte.user_id OPERATOR(pg_catalog.=) local_cte.user_id)))) cte, (SELECT intermediate_result.user_id FROM read_intermediate_result('17_4'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) foo WHERE (foo.user_id OPERATOR(pg_catalog.=) cte.user_id)
+DEBUG:  Plan 17 query after replacing subqueries and CTEs: SELECT cnt, user_id, "time", value_1, value_2, value_3, value_4 FROM (SELECT foo.cnt, users_table.user_id, users_table."time", users_table.value_1, users_table.value_2, users_table.value_3, users_table.value_4 FROM (SELECT intermediate_result.cnt FROM read_intermediate_result('17_5'::text, 'binary'::citus_copy_format) intermediate_result(cnt bigint)) foo, public.users_table WHERE (foo.cnt OPERATOR(pg_catalog.>) users_table.value_2)) subquery_and_ctes ORDER BY "time" DESC, cnt DESC, user_id DESC, value_1 DESC LIMIT 5
 DEBUG:  push down of limit count: 5
- cnt | user_id |              time               | value_1 | value_2 | value_3 | value_4
----------------------------------------------------------------------
- 105 |       1 | Thu Nov 23 17:30:34.635085 2017 |       3 |       4 |       4 |
- 105 |       1 | Thu Nov 23 17:23:03.441394 2017 |       5 |       4 |       3 |
- 105 |       3 | Thu Nov 23 17:18:51.048758 2017 |       1 |       5 |       5 |
- 105 |       3 | Thu Nov 23 17:10:35.959913 2017 |       4 |       3 |       1 |
- 105 |       5 | Thu Nov 23 16:48:32.08896 2017  |       5 |       2 |       1 |
+ cnt | user_id |              time               | value_1 | value_2 | value_3 | value_4 
+-----+---------+---------------------------------+---------+---------+---------+---------
+ 420 |       1 | Thu Nov 23 17:30:34.635085 2017 |       3 |       4 |       4 |        
+ 420 |       1 | Thu Nov 23 17:30:34.635085 2017 |       3 |       4 |       4 |        
+ 420 |       1 | Thu Nov 23 17:23:03.441394 2017 |       5 |       4 |       3 |        
+ 420 |       1 | Thu Nov 23 17:23:03.441394 2017 |       5 |       4 |       3 |        
+ 420 |       3 | Thu Nov 23 17:18:51.048758 2017 |       1 |       5 |       5 |        
 (5 rows)
 
 -- deep subquery, partitioned and non-partitioned tables together
@@ -273,15 +313,29 @@ FROM
 		) as level_6, users_table WHERE users_table.user_id = level_6.min
 	GROUP BY users_table.value_1
 	) as bar;
-DEBUG:  generating subplan XXX_1 for subquery SELECT count(*) AS cnt, value_1 FROM subquery_and_partitioning.partitioning_test GROUP BY value_1
-DEBUG:  generating subplan XXX_2 for subquery SELECT avg(events_table.event_type) AS avg FROM (SELECT level_1.cnt FROM (SELECT intermediate_result.cnt, intermediate_result.value_1 FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(cnt bigint, value_1 integer)) level_1, public.users_table WHERE (users_table.user_id OPERATOR(pg_catalog.=) level_1.cnt)) level_2, public.events_table WHERE (events_table.user_id OPERATOR(pg_catalog.=) level_2.cnt) GROUP BY level_2.cnt
-DEBUG:  generating subplan XXX_3 for subquery SELECT max(users_table.value_1) AS mx_val_1 FROM (SELECT intermediate_result.avg FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(avg numeric)) level_3, public.users_table WHERE ((users_table.user_id)::numeric OPERATOR(pg_catalog.=) level_3.avg) GROUP BY level_3.avg
-DEBUG:  generating subplan XXX_4 for subquery SELECT avg(events_table.event_type) AS avg_ev_type FROM (SELECT intermediate_result.mx_val_1 FROM read_intermediate_result('XXX_3'::text, 'binary'::citus_copy_format) intermediate_result(mx_val_1 integer)) level_4, public.events_table WHERE (level_4.mx_val_1 OPERATOR(pg_catalog.=) events_table.user_id) GROUP BY level_4.mx_val_1
-DEBUG:  generating subplan XXX_5 for subquery SELECT min(partitioning_test.value_1) AS min FROM (SELECT intermediate_result.avg_ev_type FROM read_intermediate_result('XXX_4'::text, 'binary'::citus_copy_format) intermediate_result(avg_ev_type numeric)) level_5, subquery_and_partitioning.partitioning_test WHERE (level_5.avg_ev_type OPERATOR(pg_catalog.=) (partitioning_test.id)::numeric) GROUP BY level_5.avg_ev_type
-DEBUG:  generating subplan XXX_6 for subquery SELECT avg(level_6.min) AS avg FROM (SELECT intermediate_result.min FROM read_intermediate_result('XXX_5'::text, 'binary'::citus_copy_format) intermediate_result(min integer)) level_6, public.users_table WHERE (users_table.user_id OPERATOR(pg_catalog.=) level_6.min) GROUP BY users_table.value_1
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.avg FROM read_intermediate_result('XXX_6'::text, 'binary'::citus_copy_format) intermediate_result(avg numeric)) bar
- count
----------------------------------------------------------------------
+WARNING:  list_length before removal: 20
+WARNING:  list_length after removal: 8
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+DEBUG:  generating subplan 22_1 for subquery SELECT count(*) AS cnt, value_1 FROM subquery_and_partitioning.partitioning_test GROUP BY value_1
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 4
+DEBUG:  generating subplan 22_2 for subquery SELECT avg(events_table.event_type) AS avg FROM (SELECT level_1.cnt FROM (SELECT intermediate_result.cnt, intermediate_result.value_1 FROM read_intermediate_result('22_1'::text, 'binary'::citus_copy_format) intermediate_result(cnt bigint, value_1 integer)) level_1, public.users_table WHERE (users_table.user_id OPERATOR(pg_catalog.=) level_1.cnt)) level_2, public.events_table WHERE (events_table.user_id OPERATOR(pg_catalog.=) level_2.cnt) GROUP BY level_2.cnt
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+DEBUG:  generating subplan 22_3 for subquery SELECT max(users_table.value_1) AS mx_val_1 FROM (SELECT intermediate_result.avg FROM read_intermediate_result('22_2'::text, 'binary'::citus_copy_format) intermediate_result(avg numeric)) level_3, public.users_table WHERE ((users_table.user_id)::numeric OPERATOR(pg_catalog.=) level_3.avg) GROUP BY level_3.avg
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+DEBUG:  generating subplan 22_4 for subquery SELECT avg(events_table.event_type) AS avg_ev_type FROM (SELECT intermediate_result.mx_val_1 FROM read_intermediate_result('22_3'::text, 'binary'::citus_copy_format) intermediate_result(mx_val_1 integer)) level_4, public.events_table WHERE (level_4.mx_val_1 OPERATOR(pg_catalog.=) events_table.user_id) GROUP BY level_4.mx_val_1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+DEBUG:  generating subplan 22_5 for subquery SELECT min(partitioning_test.value_1) AS min FROM (SELECT intermediate_result.avg_ev_type FROM read_intermediate_result('22_4'::text, 'binary'::citus_copy_format) intermediate_result(avg_ev_type numeric)) level_5, subquery_and_partitioning.partitioning_test WHERE (level_5.avg_ev_type OPERATOR(pg_catalog.=) (partitioning_test.id)::numeric) GROUP BY level_5.avg_ev_type
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+DEBUG:  generating subplan 22_6 for subquery SELECT avg(level_6.min) AS avg FROM (SELECT intermediate_result.min FROM read_intermediate_result('22_5'::text, 'binary'::citus_copy_format) intermediate_result(min integer)) level_6, public.users_table WHERE (users_table.user_id OPERATOR(pg_catalog.=) level_6.min) GROUP BY users_table.value_1
+DEBUG:  Plan 22 query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.avg FROM read_intermediate_result('22_6'::text, 'binary'::citus_copy_format) intermediate_result(avg numeric)) bar
+ count 
+-------
      0
 (1 row)
 

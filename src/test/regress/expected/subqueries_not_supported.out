@@ -6,6 +6,8 @@ SET search_path TO not_supported, public;
 SET citus.coordinator_aggregation_strategy TO 'disabled';
 SET client_min_messages TO DEBUG1;
 CREATE TABLE users_table_local AS SELECT * FROM users_table;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- we don't support subqueries with local tables when they are not leaf queries
 SELECT
 	*
@@ -17,6 +19,10 @@ FROM
 			users_table_local, (SELECT user_id FROM events_table) as evs
 		WHERE users_table_local.user_id = evs.user_id
 	) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  direct joins between distributed and local tables are not supported
 HINT:  Use CTE's or subqueries to select from local tables and use them in joins
 RESET client_min_messages;
@@ -29,6 +35,8 @@ SELECT user_id FROM users_table WHERE user_id IN
 	 USING (user_id)
 	 );
 ERROR:  relation "events_table_local" does not exist
+LINE 5:    users_table_local JOIN (SELECT user_id FROM events_table_...
+                                                       ^
 SET client_min_messages TO DEBUG1;
 -- we don't support aggregate distinct if the group by is not on partition key, expect for count distinct
 -- thus baz and bar are recursively planned but not foo
@@ -44,8 +52,16 @@ FROM
 (
 	SELECT avg(DISTINCT value_1), random() FROM users_table GROUP BY value_2 OFFSET 3
 ) as foo;
-DEBUG:  generating subplan XXX_1 for subquery SELECT avg(DISTINCT value_1) AS avg, random() AS random FROM public.users_table GROUP BY user_id OFFSET 3
-DEBUG:  generating subplan XXX_2 for subquery SELECT count(DISTINCT value_1) AS count, random() AS random FROM public.users_table GROUP BY value_2 OFFSET 3
+WARNING:  list_length before removal: 18
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+DEBUG:  generating subplan 4_1 for subquery SELECT avg(DISTINCT value_1) AS avg, random() AS random FROM public.users_table GROUP BY user_id OFFSET 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+DEBUG:  generating subplan 4_2 for subquery SELECT count(DISTINCT value_1) AS count, random() AS random FROM public.users_table GROUP BY value_2 OFFSET 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot compute aggregate (distinct)
 DETAIL:  table partitioning is unsuitable for aggregate (distinct)
 -- we don't support array_aggs with ORDER BYs
@@ -61,6 +77,10 @@ FROM
 		GROUP BY users_table.value_2
 		LIMIT 5
 	) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  array_agg with order by is unsupported
 -- we don't support recursive subqueries when router executor is disabled
 SET citus.enable_router_execution TO false;
@@ -77,9 +97,13 @@ FROM
      ORDER BY 1 DESC LIMIT 5
      ) as foo
     ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT DISTINCT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) ORDER BY users_table.user_id DESC LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT user_id FROM (SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) foo ORDER BY user_id DESC
+DEBUG:  generating subplan 10_1 for subquery SELECT DISTINCT users_table.user_id FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) ORDER BY users_table.user_id DESC LIMIT 5
+DEBUG:  Plan 10 query after replacing subqueries and CTEs: SELECT user_id FROM (SELECT intermediate_result.user_id FROM read_intermediate_result('10_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) foo ORDER BY user_id DESC
 ERROR:  cannot handle complex subqueries when the router executor is disabled
 SET citus.enable_router_execution TO true;
 -- OUTER JOINs where the outer part is recursively planned and not the other way
@@ -91,9 +115,13 @@ FROM
     LEFT JOIN
     	(SELECT users_table.value_2 FROM users_table, events_table WHERE users_table.user_id = events_table.user_id AND event_type IN (5,6,7,8)) as bar
 	ON(foo.value_2 = bar.value_2);
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  push down of limit count: 5
-DEBUG:  generating subplan XXX_1 for subquery SELECT users_table.value_2 FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) LIMIT 5
-DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT foo.value_2 FROM ((SELECT intermediate_result.value_2 FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(value_2 integer)) foo LEFT JOIN (SELECT users_table.value_2 FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[5, 6, 7, 8])))) bar ON ((foo.value_2 OPERATOR(pg_catalog.=) bar.value_2)))
+DEBUG:  generating subplan 12_1 for subquery SELECT users_table.value_2 FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[1, 2, 3, 4]))) LIMIT 5
+DEBUG:  Plan 12 query after replacing subqueries and CTEs: SELECT foo.value_2 FROM ((SELECT intermediate_result.value_2 FROM read_intermediate_result('12_1'::text, 'binary'::citus_copy_format) intermediate_result(value_2 integer)) foo LEFT JOIN (SELECT users_table.value_2 FROM public.users_table, public.events_table WHERE ((users_table.user_id OPERATOR(pg_catalog.=) events_table.user_id) AND (events_table.event_type OPERATOR(pg_catalog.=) ANY (ARRAY[5, 6, 7, 8])))) bar ON ((foo.value_2 OPERATOR(pg_catalog.=) bar.value_2)))
 ERROR:  cannot pushdown the subquery
 DETAIL:  Complex subqueries and CTEs cannot be in the outer part of the outer join
 -- Aggregates in subquery without partition column can be planned recursively
@@ -113,6 +141,8 @@ WHERE
             users_table.user_id = events_table.user_id
     )
 ;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot push down this subquery
 DETAIL:  Aggregates without group by are currently unsupported when a subquery references a column from another query
 -- Having qual without group by on partition column can be planned recursively
@@ -134,17 +164,31 @@ WHERE
             MIN(value_2) > 2
     )
 ;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot push down this subquery
 DETAIL:  Having qual without group by on partition column is currently unsupported when a subquery references a column from another query
 -- We do not support GROUPING SETS in subqueries
 -- This also includes ROLLUP or CUBE clauses
 SELECT * FROM (SELECT user_id, value_1 FROM users_table GROUP BY GROUPING SETS ((user_id), (value_1))) s;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  could not run distributed query with GROUPING SETS, CUBE, or ROLLUP
 HINT:  Consider using an equality filter on the distributed table's partition column.
 SELECT * FROM (SELECT user_id, value_1 FROM users_table GROUP BY ROLLUP (user_id, value_1)) s;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  could not run distributed query with GROUPING SETS, CUBE, or ROLLUP
 HINT:  Consider using an equality filter on the distributed table's partition column.
 SELECT * FROM (SELECT user_id, value_1 FROM users_table GROUP BY CUBE (user_id, value_1)) s;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  could not run distributed query with GROUPING SETS, CUBE, or ROLLUP
 HINT:  Consider using an equality filter on the distributed table's partition column.
 SET client_min_messages TO DEFAULT;

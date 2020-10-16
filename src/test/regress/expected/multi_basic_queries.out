@@ -4,18 +4,24 @@
 -- Execute simple sum, average, and count queries on data recently uploaded to
 -- our partitioned table.
 SELECT count(*) FROM lineitem;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
  12000
 (1 row)
 
 SELECT sum(l_extendedprice) FROM lineitem;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
      sum
 ---------------------------------------------------------------------
  457702024.50
 (1 row)
 
 SELECT avg(l_extendedprice) FROM lineitem;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
         avg
 ---------------------------------------------------------------------
  38141.835375000000
@@ -25,6 +31,8 @@ SELECT avg(l_extendedprice) FROM lineitem;
 BEGIN;
 SET TRANSACTION READ ONLY;
 SELECT count(*) FROM lineitem;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
  12000

@@ -18,6 +18,8 @@ FROM
 		l_orderkey = o_orderkey
 	GROUP BY
 		l_orderkey) AS unit_prices;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
            avg
 ---------------------------------------------------------------------
  142158.8766934673366834
@@ -43,6 +45,10 @@ FROM
 		lineitem_subquery
 	GROUP BY
 		l_suppkey) AS order_counts;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  generating subplan XXX_1 for subquery SELECT l_suppkey, count(*) AS order_count FROM public.lineitem_subquery GROUP BY l_suppkey
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT avg(order_count) AS avg FROM (SELECT intermediate_result.l_suppkey, intermediate_result.order_count FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(l_suppkey integer, order_count bigint)) order_counts
         avg
@@ -62,6 +68,10 @@ FROM
 		orders_subquery
 	GROUP BY
 		l_orderkey) AS unit_prices;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 1
 ERROR:  cannot perform distributed planning on this query
 DETAIL:  Cartesian products are currently unsupported
 RESET client_min_messages;
@@ -69,6 +79,8 @@ RESET client_min_messages;
 SELECT count(*) FROM (
    SELECT l_orderkey FROM lineitem_subquery JOIN (SELECT random()::int r) sub ON (l_orderkey = r) WHERE r > 10
 ) b;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
      0
@@ -81,9 +93,15 @@ SELECT count(*) FROM
    (SELECT l_orderkey FROM lineitem_subquery) UNION ALL
    (SELECT 1::bigint)
 ) b;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT l_orderkey FROM public.lineitem_subquery
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_2 for subquery SELECT intermediate_result.l_orderkey FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(l_orderkey bigint) UNION ALL SELECT (1)::bigint AS int8
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.l_orderkey FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(l_orderkey bigint)) b
@@ -99,11 +117,19 @@ SELECT count(*) FROM
    (SELECT l_orderkey FROM lineitem_subquery) UNION
    (SELECT l_partkey FROM lineitem_subquery)
 ) b;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT l_orderkey FROM public.lineitem_subquery
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_2 for subquery SELECT l_partkey FROM public.lineitem_subquery
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_3 for subquery SELECT intermediate_result.l_orderkey FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(l_orderkey bigint) UNION SELECT intermediate_result.l_partkey FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(l_partkey integer)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.l_orderkey FROM read_intermediate_result('XXX_3'::text, 'binary'::citus_copy_format) intermediate_result(l_orderkey bigint)) b
@@ -119,6 +145,8 @@ SELECT count(*) FROM
    (SELECT l_orderkey FROM lineitem_subquery) UNION
    (SELECT l_orderkey FROM lineitem_subquery)
 ) b;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
  count
 ---------------------------------------------------------------------
@@ -147,6 +175,10 @@ FROM
 			orders_subquery
 		WHERE
 			lineitem_quantities.l_orderkey = o_orderkey) orders_price ON true;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
           avg
 ---------------------------------------------------------------------
  17470.0940725222668915
@@ -176,6 +208,8 @@ FROM
 			orders_subquery
 		WHERE
 			lineitem_quantities.l_orderkey = o_orderkey) orders_price ON true;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot push down this subquery
 DETAIL:  Limit in subquery without limit in the outermost query is unsupported
 -- reset the flag for next query
@@ -191,6 +225,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -217,6 +253,8 @@ WHERE
 	(o_orderkey < l_quantity + 3)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -242,6 +280,8 @@ WHERE
 	(o_orderkey < l_quantity + 3)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -267,6 +307,8 @@ WHERE
 	(o_orderkey < l_quantity + 3)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- implicit typecast supported in equi-join
 SELECT l_orderkey
@@ -277,6 +319,8 @@ JOIN
 ON (l_orderkey::int8 = o_orderkey::int8)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
       14947
@@ -300,6 +344,8 @@ JOIN
 ON (l_orderkey::int4 = o_orderkey::int8)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- type casts in filters are supported as long as
 -- a valid equi-join exists
@@ -313,6 +359,8 @@ WHERE
 	(o_orderkey::int8 < l_quantity::int8 + 3)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -338,6 +386,8 @@ WHERE
 	(o_orderkey::int4 < l_quantity::int8 + 3)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -364,6 +414,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- query is not supported if there is a single
 -- join clause with arithmetic expression. It fails
@@ -376,6 +428,8 @@ JOIN
 ON (l_orderkey = o_orderkey + 1)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- query is not supported if does not have equi-join clause
 SELECT l_orderkey
@@ -388,6 +442,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are joined on their distribution columns with equal operator
 -- outer joins on reference tables with functions works
 SELECT DISTINCT ON (t1.user_id) t1.user_id, t2.value_1, t2.value_2, t2.value_3
@@ -395,6 +451,8 @@ FROM events_table t1
 LEFT JOIN users_reference_table t2 ON t1.user_id = trunc(t2.user_id)
 ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id | value_1 | value_2 | value_3
 ---------------------------------------------------------------------
        6 |       5 |       2 |       0
@@ -410,6 +468,8 @@ FROM events_table t1
 LEFT JOIN users_reference_table t2 ON t1.user_id > t2.user_id
 ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id | value_1 | value_2 | value_3
 ---------------------------------------------------------------------
        6 |       5 |       5 |       3
@@ -425,6 +485,8 @@ FROM events_table t1
 LEFT JOIN users_table t2 ON t1.user_id > t2.user_id
 ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- outer joins on reference tables with expressions should work
 SELECT DISTINCT ON (t1.user_id) t1.user_id, t2.value_1, t2.value_2, t2.value_3
@@ -432,6 +494,8 @@ FROM events_table t1
 LEFT JOIN users_reference_table t2 ON t1.user_id = (CASE WHEN t2.user_id > 3 THEN 3 ELSE t2.user_id END)
 ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id | value_1 | value_2 | value_3
 ---------------------------------------------------------------------
        6 |         |         |
@@ -449,6 +513,8 @@ SELECT DISTINCT ON (t1.user_id) t1.user_id, t2.value_1, t2.value_2, t2.value_3
  LEFT JOIN users_reference_table t2 ON t1.user_id = trunc(t2.user_id)
  ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
  LIMIT 5;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
  user_id | value_1 | value_2 | value_3
 ---------------------------------------------------------------------
        6 |       5 |       2 |       0
@@ -466,6 +532,8 @@ SELECT DISTINCT ON (t1.user_id) t1.user_id, t2.value_1, t2.value_2, t2.value_3
  LEFT JOIN users_reference_table t2 ON t1.user_id = trunc(t2.user_id)
  ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
  LIMIT 5;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 -- outer joins as subqueries should work
 -- https://github.com/citusdata/citus/issues/2739
@@ -477,13 +545,15 @@ FROM (
 ) lo
 ORDER BY 1, 2, 3
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id | value_1 | event_type
 ---------------------------------------------------------------------
        1 |       1 |          0
        1 |       1 |          0
-       1 |       1 |          1
-       1 |       1 |          1
-       1 |       1 |          2
+       1 |       1 |          0
+       1 |       1 |          0
+       1 |       1 |          0
 (5 rows)
 
 -- inner joins on reference tables with functions works
@@ -492,6 +562,8 @@ FROM events_table t1
 JOIN users_reference_table t2 ON t1.user_id = trunc(t2.user_id)
 ORDER BY 1 DESC, 2 DESC, 3 DESC, 4 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | value_1 | value_2 | value_3
 ---------------------------------------------------------------------
        6 |       5 |       2 |       0
@@ -512,6 +584,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_orderkey DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_orderkey
 ---------------------------------------------------------------------
          39
@@ -535,6 +609,8 @@ JOIN
 ON (l_orderkey = o_orderkey)
 WHERE
 	(o_orderkey < l_quantity);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
     13
@@ -551,6 +627,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_quantity DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_quantity
 ---------------------------------------------------------------------
       50.00
@@ -576,6 +654,8 @@ WHERE
 	(o_orderkey < l_quantity)
 ORDER BY l_quantity DESC
 LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  l_quantity
 ---------------------------------------------------------------------
       50.00
@@ -599,6 +679,8 @@ JOIN
 ON (l_orderkey = o_orderkey)
 WHERE
 	(o_orderkey < l_quantity);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
     25
@@ -615,6 +697,8 @@ FROM (
 	GROUP BY
 	   l_orderkey
 ) z;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      7
@@ -631,6 +715,8 @@ FROM (
 	GROUP BY
 	   l_orderkey
 ) z;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot compute aggregate (distinct)
 DETAIL:  Only count(distinct) aggregate is supported in subqueries
 SELECT
@@ -643,6 +729,8 @@ FROM (
 	GROUP BY
 	   l_orderkey
 ) z;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  cannot compute aggregate (distinct)
 DETAIL:  Only count(distinct) aggregate is supported in subqueries
 -- Check supported subquery types.
@@ -667,6 +755,8 @@ ORDER BY
 	total_order_count DESC,
 	o_custkey ASC
 LIMIT 10;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  o_custkey | total_order_count
 ---------------------------------------------------------------------
       1462 |                 9
@@ -697,6 +787,8 @@ FROM
 WHERE
 	unit_price > 1000 AND
 	unit_price < 10000;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
           avg
 ---------------------------------------------------------------------
  4968.4946466804019323
@@ -704,8 +796,12 @@ WHERE
 
 -- Check unsupported subqueries in target list
 SELECT (SELECT 1) FROM orders_subquery;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  could not run distributed query with subquery outside the FROM, WHERE and HAVING clauses
 SELECT sum((SELECT 1)) FROM orders_subquery;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  could not run distributed query with subquery outside the FROM, WHERE and HAVING clauses
 -- Check that if subquery is pulled, we don't error and run query properly.
 SELECT count(*) FROM
@@ -716,6 +812,8 @@ SELECT count(*) FROM
 	) a
 	WHERE l_orderkey = 1
 ) b;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
@@ -729,6 +827,8 @@ SELECT count(*) FROM
 	) a
 	WHERE l_orderkey = 1
 ) b;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      6
@@ -747,6 +847,8 @@ SELECT max(l_orderkey) FROM
 			l_orderkey
   ) z
 ) y;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
   max
 ---------------------------------------------------------------------
  14947
@@ -768,6 +870,8 @@ FROM
       WHERE user_id = 3
       GROUP BY user_id) AS bar
    WHERE foo.user_id = bar.user_id ) AS baz;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | counter | user_id | counter
 ---------------------------------------------------------------------
 (0 rows)
@@ -791,9 +895,11 @@ FROM
    WHERE foo.user_id = bar.user_id ) AS baz
 ORDER BY 1,2
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | counter | user_id | counter
 ---------------------------------------------------------------------
-       2 |      57 |       2 |      57
+       2 |     114 |       2 |     114
 (1 row)
 
 -- Add one more shard to one relation, then test if we error out because of different
@@ -815,6 +921,8 @@ FROM
 		l_orderkey = o_orderkey
 	GROUP BY
 		l_orderkey) AS unit_prices;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot push down this subquery
 DETAIL:  Shards of relations in subquery need to have 1-to-1 shard partitioning
 -- Check that we can prune shards in subqueries with VARCHAR partition columns
@@ -836,6 +944,8 @@ SET client_min_messages TO DEBUG2;
 SELECT * FROM
 	(SELECT count(*) FROM subquery_pruning_varchar_test_table WHERE a = 'onder' GROUP BY a)
 AS foo;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner not enabled.
  count
 ---------------------------------------------------------------------
@@ -844,6 +954,8 @@ DEBUG:  Router planner not enabled.
 SELECT * FROM
 	(SELECT count(*) FROM subquery_pruning_varchar_test_table WHERE 'eren' = a GROUP BY a)
 AS foo;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner not enabled.
  count
 ---------------------------------------------------------------------
@@ -878,6 +990,8 @@ SELECT * FROM
 	GROUP BY
 		a_inner)
 AS foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  a
 ---------------------------------------------------------------------
 (0 rows)
@@ -885,17 +999,29 @@ AS foo;
 RESET citus.enable_router_execution;
 -- Test https://github.com/citusdata/citus/issues/3424
 insert into subquery_pruning_varchar_test_table values ('1', '1'), (2, '1'), (3, '2'), (3, '1'), (4, '4'), (5, '6');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 WITH cte_1 AS (SELECT b max FROM subquery_pruning_varchar_test_table)
 SELECT a
 FROM subquery_pruning_varchar_test_table
 JOIN cte_1 ON a = max::text
 GROUP BY a HAVING a = (SELECT a)
 ORDER BY 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 1
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 ERROR:  Subqueries in HAVING cannot refer to outer query
 -- Test https://github.com/citusdata/citus/issues/3432
 SELECT t1.event_type FROM events_table t1
 GROUP BY t1.event_type HAVING t1.event_type > avg((SELECT t2.value_2 FROM users_table t2 ORDER BY 1 DESC LIMIT 1))
 ORDER BY 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  event_type
 ---------------------------------------------------------------------
           6
@@ -904,6 +1030,10 @@ ORDER BY 1;
 SELECT t1.event_type FROM events_table t1
 GROUP BY t1.event_type HAVING t1.event_type > avg(2 + (SELECT t2.value_2 FROM users_table t2 ORDER BY 1 DESC LIMIT 1))
 ORDER BY 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  event_type
 ---------------------------------------------------------------------
 (0 rows)
@@ -911,6 +1041,10 @@ ORDER BY 1;
 SELECT t1.event_type FROM events_table t1
 GROUP BY t1.event_type HAVING t1.event_type > avg((SELECT t2.value_2 FROM users_table t2 ORDER BY 1 DESC LIMIT 1) - t1.value_2)
 ORDER BY 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  event_type
 ---------------------------------------------------------------------
           4
@@ -922,6 +1056,10 @@ RESET citus.coordinator_aggregation_strategy;
 SELECT t1.event_type FROM events_table t1
 GROUP BY t1.event_type HAVING t1.event_type > corr(t1.value_3, t1.value_2 + (SELECT t2.value_2 FROM users_table t2 ORDER BY 1 DESC LIMIT 1))
 ORDER BY 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  event_type
 ---------------------------------------------------------------------
           0
@@ -935,6 +1073,8 @@ ORDER BY 1;
 SELECT t1.event_type FROM events_table t1
 GROUP BY t1.event_type HAVING t1.event_type * 5 > sum(distinct t1.value_3)
 ORDER BY 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  event_type
 ---------------------------------------------------------------------
           3
@@ -968,6 +1108,10 @@ SELECT create_reference_table('keyvalref');
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value) FROM keyvalref GROUP BY key);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
                                  QUERY PLAN
 ---------------------------------------------------------------------
  HashAggregate
@@ -997,6 +1141,10 @@ SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value)
 -- For some reason 'ORDER BY 1 DESC LIMIT 1' triggers recursive planning
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value) FROM keyvalref GROUP BY key ORDER BY 1 DESC LIMIT 1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
                                        QUERY PLAN
 ---------------------------------------------------------------------
  HashAggregate
@@ -1028,6 +1176,10 @@ SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value) FROM keyval2 GROUP BY key ORDER BY 1 DESC LIMIT 1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
                                            QUERY PLAN
 ---------------------------------------------------------------------
  HashAggregate
@@ -1062,6 +1214,8 @@ SELECT count(*) FROM keyval1 GROUP BY key HAVING sum(value) > (SELECT sum(value)
 
 EXPLAIN (COSTS OFF)
 SELECT count(*) FROM keyval1 k1 WHERE k1.key = 2 GROUP BY key HAVING sum(value) > (SELECT sum(value) FROM keyval2 k2 WHERE k2.key = 2 GROUP BY key ORDER BY 1 DESC LIMIT 1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
                              QUERY PLAN
 ---------------------------------------------------------------------
  Custom Scan (Citus Adaptive)
@@ -1109,9 +1263,11 @@ FROM
 	GROUP BY
 		tenant_id,
 		user_id) AS subquery;
-   event_average
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+    event_average
 ---------------------------------------------------------------------
- 3.6666666666666667
+ 14.6666666666666667
 (1 row)
 
 -- Union and left join subquery pushdown
@@ -1178,6 +1334,8 @@ GROUP BY
 	hasdone
 ORDER BY
     event_average DESC;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
    event_average    |       hasdone
 ---------------------------------------------------------------------
  4.0000000000000000 | Has not done paying
@@ -1254,6 +1412,8 @@ GROUP BY
 	count_pay
 ORDER BY
 	count_pay;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
    event_average    | count_pay
 ---------------------------------------------------------------------
  3.0000000000000000 |         0
@@ -1313,11 +1473,13 @@ ORDER BY
 	user_lastseen DESC
 LIMIT
 	10;
- tenant_id | user_id | user_lastseen |        event_array
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
+ tenant_id | user_id | user_lastseen |                                              event_array
 ---------------------------------------------------------------------
-         1 |    1003 |    1472807315 | {click,click,click,submit}
-         1 |    1002 |    1472807215 | {click,click,submit,pay}
-         1 |    1001 |    1472807115 | {click,submit,pay}
+         1 |    1003 |    1472807315 | {click,click,click,click,click,click,click,click,click,click,click,click,submit,submit,submit,submit}
+         1 |    1002 |    1472807215 | {click,click,click,click,click,click,click,click,submit,submit,submit,submit,pay,pay,pay,pay}
+         1 |    1001 |    1472807115 | {click,click,click,click,submit,submit,submit,submit,pay,pay,pay,pay}
 (3 rows)
 
 -- cleanup the tables and the type & functions

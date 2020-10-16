@@ -13,9 +13,17 @@ SELECT create_distributed_table('user_buy_test_table', 'user_id');
 (1 row)
 
 INSERT INTO user_buy_test_table VALUES(1,2,1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO user_buy_test_table VALUES(2,3,4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO user_buy_test_table VALUES(3,4,2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO user_buy_test_table VALUES(7,5,2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 CREATE TABLE users_return_test_table(user_id int, item_id int, buy_count int);
 SELECT create_distributed_table('users_return_test_table', 'user_id');
  create_distributed_table
@@ -24,24 +32,34 @@ SELECT create_distributed_table('users_return_test_table', 'user_id');
 (1 row)
 
 INSERT INTO users_return_test_table VALUES(4,1,1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO users_return_test_table VALUES(1,3,1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 INSERT INTO users_return_test_table VALUES(3,2,2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- Simple Join test with reference table
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN users_ref_test_table
   ON user_buy_test_table.user_id = users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
-     3
+     6
 (1 row)
 
 -- Should work, reference table at the inner side is allowed
 SELECT count(*) FROM
   (SELECT random(), k_no FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.user_id = users_ref_test_table.id) subquery_1 WHERE k_no = 47;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
-     1
+     2
 (1 row)
 
 -- Should work, although no equality between partition column and reference table
@@ -49,23 +67,34 @@ SELECT subquery_1.item_id FROM
   (SELECT user_buy_test_table.item_id, random() FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.item_id = users_ref_test_table.id) subquery_1
 ORDER BY 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  item_id
 ---------------------------------------------------------------------
        2
+       2
+       3
        3
        4
+       4
        5
-(4 rows)
+       5
+(8 rows)
 
 -- Should work, although no equality between partition column and reference table
 SELECT subquery_1.user_id FROM
   (SELECT user_buy_test_table.user_id, random() FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.user_id > users_ref_test_table.id) subquery_1
 ORDER BY 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  user_id
 ---------------------------------------------------------------------
        1
        2
+       2
+       3
+       3
        3
        3
        7
@@ -74,54 +103,72 @@ ORDER BY 1;
        7
        7
        7
-(10 rows)
+       7
+       7
+       7
+       7
+       7
+       7
+(19 rows)
 
 -- Shouldn't work, reference table at the outer side is not allowed
 SELECT * FROM
   (SELECT random() FROM users_ref_test_table LEFT JOIN user_buy_test_table
   ON users_ref_test_table.id = user_buy_test_table.user_id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- Should work, reference table at the inner side is allowed
 SELECT count(*) FROM
   (SELECT random() FROM users_ref_test_table RIGHT JOIN user_buy_test_table
   ON user_buy_test_table.user_id = users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  count
 ---------------------------------------------------------------------
-     4
+     7
 (1 row)
 
 -- Shouldn't work, reference table at the outer side is not allowed
 SELECT * FROM
   (SELECT random() FROM user_buy_test_table RIGHT JOIN users_ref_test_table
   ON user_buy_test_table.user_id = users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- Equi join test with reference table on non-partition keys
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN users_ref_test_table
   ON user_buy_test_table.item_id = users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
-     4
+     8
 (1 row)
 
 -- Non-equi join test with reference table on non-partition keys
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN users_ref_test_table
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
-    10
+    20
 (1 row)
 
 -- Non-equi left joins with reference tables on non-partition keys
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  count
 ---------------------------------------------------------------------
-    10
+    20
 (1 row)
 
 -- Should pass since reference table locates in the inner part of each left join
@@ -131,9 +178,11 @@ SELECT count(*) FROM
   LEFT JOIN
   (SELECT tt1.user_id, random() FROM user_buy_test_table as tt1 LEFT JOIN users_ref_test_table as ref
    ON tt1.user_id = ref.id) subquery_2 ON subquery_1.user_id = subquery_2.user_id;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 5
  count
 ---------------------------------------------------------------------
-     2
+     4
 (1 row)
 
 -- two subqueries, each include joins with reference table
@@ -144,6 +193,8 @@ SELECT count(*) FROM
 (SELECT DISTINCT user_buy_test_table.user_id, random() FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.user_id > users_ref_test_table.id AND users_ref_test_table.k_no > 44 AND user_buy_test_table.user_id > 44) subquery_2
 WHERE subquery_1.user_id = subquery_2.user_id ;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 5
  count
 ---------------------------------------------------------------------
      4
@@ -165,12 +216,16 @@ SELECT subquery_2.id
    			ON tt1.user_id = ref.id) subquery_2
    	ON subquery_1.user_id = subquery_2.user_id
 	ORDER BY 1 DESC LIMIT 5;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  id
 ---------------------------------------------------------------------
   3
+  3
+  2
   2
   1
-(3 rows)
+(5 rows)
 
 -- almost the same query as the above, but reference table join wrapped with
 -- another subquery
@@ -189,12 +244,17 @@ SELECT subquery_1.user_id
    					ON tt1.user_id = ref.id) subquery_2_inner) subquery_2
    	ON subquery_1.user_id = subquery_2.user_id
 	ORDER BY 1;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
  user_id
 ---------------------------------------------------------------------
        1
+       1
+       3
        3
 
-(3 rows)
+
+(6 rows)
 
 -- should be able to pushdown since reference table is in the
 -- inner part of the left join
@@ -208,13 +268,15 @@ FROM
       INNER JOIN events_reference_table ON (events_reference_table.value_2 = users_table.user_id)
   ) as foo
   GROUP BY user_id ORDER BY 2 DESC LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
  user_id |  sum
 ---------------------------------------------------------------------
-       2 | 31248
-       3 | 15120
-       4 | 14994
-       5 |  8694
-       1 |  7590
+       2 | 374976
+       3 | 181440
+       4 | 179928
+       5 | 104328
+       1 |  91080
 (5 rows)
 
 -- same query as above, reference table is wrapped into a subquery
@@ -228,19 +290,23 @@ FROM
       INNER JOIN (SELECT *, random() FROM events_reference_table) as ref_all ON (ref_all.value_2 = users_table.user_id)
   ) as foo
   GROUP BY user_id ORDER BY 2 DESC LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
  user_id |  sum
 ---------------------------------------------------------------------
-       2 | 31248
-       3 | 15120
-       4 | 14994
-       5 |  8694
-       1 |  7590
+       2 | 374976
+       3 | 181440
+       4 | 179928
+       5 | 104328
+       1 |  91080
 (5 rows)
 
 -- table function can be the inner relationship in a join
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN generate_series(1,10) AS users_ref_test_table(id)
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
     10
@@ -249,6 +315,8 @@ SELECT count(*) FROM
 -- table function cannot be used without subquery pushdown
 SELECT count(*) FROM user_buy_test_table JOIN generate_series(1,10) AS users_ref_test_table(id)
   ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
      4
@@ -258,6 +326,8 @@ SELECT count(*) FROM user_buy_test_table JOIN generate_series(1,10) AS users_ref
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table LEFT JOIN generate_series(1,10) AS users_ref_test_table(id)
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  count
 ---------------------------------------------------------------------
     10
@@ -265,6 +335,8 @@ SELECT count(*) FROM
 
 SELECT count(*) FROM user_buy_test_table LEFT JOIN (SELECT * FROM generate_series(1,10) id) users_ref_test_table
 ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
  count
 ---------------------------------------------------------------------
      4
@@ -274,10 +346,14 @@ ON user_buy_test_table.item_id = users_ref_test_table.id;
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table RIGHT JOIN generate_series(1,10) AS users_ref_test_table(id)
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a table function in the outer part of the outer join
 SELECT count(*) FROM user_buy_test_table RIGHT JOIN (SELECT * FROM generate_series(1,10) id) users_ref_test_table
 ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a table function in the outer part of the outer join
 -- volatile functions can be used as table expressions through recursive planning
@@ -285,6 +361,8 @@ SET client_min_messages TO DEBUG;
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN random() AS users_ref_test_table(id)
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT id FROM random() users_ref_test_table(id)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT random() AS random FROM (public.user_buy_test_table JOIN (SELECT intermediate_result.id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(id double precision)) users_ref_test_table(id) ON (((user_buy_test_table.item_id)::double precision OPERATOR(pg_catalog.>) users_ref_test_table.id)))) subquery_1
@@ -299,6 +377,8 @@ SELECT count(*) FROM
   (SELECT item_id FROM user_buy_test_table JOIN generate_series(random()::int,10) AS users_ref_test_table(id)
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1
 WHERE item_id = 6;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT id FROM generate_series((random())::integer, 10) users_ref_test_table(id)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT user_buy_test_table.item_id FROM (public.user_buy_test_table JOIN (SELECT intermediate_result.id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) users_ref_test_table(id) ON ((user_buy_test_table.item_id OPERATOR(pg_catalog.>) users_ref_test_table.id)))) subquery_1 WHERE (item_id OPERATOR(pg_catalog.=) 6)
@@ -313,9 +393,15 @@ SELECT count(*) FROM
   (SELECT user_id FROM user_buy_test_table
    UNION ALL
    SELECT id FROM generate_series(1,10) AS users_ref_test_table(id)) subquery_1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id FROM public.user_buy_test_table
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_2 for subquery SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer) UNION ALL SELECT users_ref_test_table.id FROM generate_series(1, 10) users_ref_test_table(id)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) subquery_1
@@ -330,6 +416,8 @@ RESET client_min_messages;
 SELECT count(*) FROM
   (SELECT random() FROM user_buy_test_table JOIN (SELECT 4 AS id) users_ref_test_table
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
@@ -338,6 +426,8 @@ SELECT count(*) FROM
 -- subquery without FROM triggers subquery pushdown
 SELECT count(*) FROM user_buy_test_table JOIN (SELECT 5 AS id) users_ref_test_table
 ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
@@ -346,6 +436,8 @@ ON user_buy_test_table.item_id = users_ref_test_table.id;
 -- subquery without FROM can be the inner relationship in an outer join
 SELECT count(*) FROM user_buy_test_table LEFT JOIN (SELECT 5 AS id) users_ref_test_table
 ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      4
@@ -354,6 +446,8 @@ ON user_buy_test_table.item_id = users_ref_test_table.id;
 -- subquery without FROM cannot be the outer relationship in an outer join
 SELECT count(*) FROM user_buy_test_table RIGHT JOIN (SELECT 5 AS id) users_ref_test_table
 ON user_buy_test_table.item_id = users_ref_test_table.id;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a subquery without FROM in the outer part of the outer join
 -- can perform a union with subquery without FROM
@@ -363,9 +457,15 @@ SELECT count(*) FROM
   (SELECT user_id FROM user_buy_test_table
    UNION ALL
    SELECT id FROM (SELECT 5 AS id) users_ref_test_table) subquery_1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id FROM public.user_buy_test_table
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_2 for subquery SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer) UNION ALL SELECT users_ref_test_table.id FROM (SELECT 5 AS id) users_ref_test_table
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)) subquery_1
@@ -382,9 +482,15 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id FROM public.user_buy_test_table
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_2 for subquery SELECT users_ref_test_table.id FROM public.users_ref_test_table UNION SELECT intermediate_result.user_id FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT id FROM (SELECT intermediate_result.id FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(id integer)) sub ORDER BY id DESC
@@ -406,9 +512,15 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id, random() * 0 FROM (SELECT user_id FROM user_buy_test_table) sub2) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Router planner cannot handle multi-shard select queries
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id, (random() OPERATOR(pg_catalog.*) (0)::double precision) FROM (SELECT user_buy_test_table.user_id FROM public.user_buy_test_table) sub2
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  Creating router plan
 DEBUG:  generating subplan XXX_2 for subquery SELECT sub1.id, (random() OPERATOR(pg_catalog.*) (0)::double precision) FROM (SELECT users_ref_test_table.id FROM public.users_ref_test_table) sub1 UNION SELECT intermediate_result.user_id, intermediate_result."?column?" FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, "?column?" double precision)
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT id, "?column?" FROM (SELECT intermediate_result.id, intermediate_result."?column?" FROM read_intermediate_result('XXX_2'::text, 'binary'::citus_copy_format) intermediate_result(id integer, "?column?" double precision)) sub(id, "?column?") ORDER BY id DESC
@@ -432,6 +544,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
  user_id
 ---------------------------------------------------------------------
@@ -448,6 +562,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id, random() * 0 FROM (SELECT user_id FROM user_buy_test_table) sub2) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 DEBUG:  Router planner cannot handle multi-shard select queries
  user_id | ?column?
 ---------------------------------------------------------------------
@@ -463,6 +579,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 14
+WARNING:  list_length after removal: 7
 DEBUG:  Router planner cannot handle multi-shard select queries
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
@@ -472,6 +590,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table WHERE user_id in (select id from users_ref_test_table)) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 5
+WARNING:  list_length after removal: 4
 DEBUG:  Router planner cannot handle multi-shard select queries
  user_id
 ---------------------------------------------------------------------
@@ -489,6 +609,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 DEBUG:  Router planner cannot handle multi-shard select queries
  user_id
 ---------------------------------------------------------------------
@@ -507,6 +629,8 @@ SELECT * FROM
 	 UNION
 	 SELECT user_id FROM user_buy_test_table) sub
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 DEBUG:  Router planner cannot handle multi-shard select queries
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
@@ -523,14 +647,16 @@ FROM
       LEFT JOIN events_reference_table ON (events_reference_table.value_2 = users_table.user_id)
   ) as foo
   GROUP BY user_id ORDER BY 2 DESC LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
  user_id |  sum
 ---------------------------------------------------------------------
-       2 | 31248
-       3 | 15120
-       4 | 14994
-       5 |  8694
-       1 |  7590
-       6 |   210
+       2 | 374976
+       3 | 181440
+       4 | 179928
+       5 | 104328
+       1 |  91080
+       6 |    840
 (6 rows)
 
 -- should not be able to pushdown since reference table is in the
@@ -545,6 +671,8 @@ FROM
       LEFT JOIN events_table ON (events_table.user_id = users_table.user_id)
   ) as foo
   GROUP BY user_id ORDER BY 2 DESC LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- should not be able to pushdown since reference table is in the
@@ -554,6 +682,8 @@ SELECT
 FROM
     (SELECT *, random() FROM events_reference_table) as ref_all LEFT JOIN users_table
     ON (users_table.user_id = ref_all.value_2);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- should not be able to pushdown since reference table is in the
@@ -568,6 +698,8 @@ FROM
       LEFT JOIN events_table ON (events_table.user_id = users_table.user_id)
   ) as foo
   GROUP BY user_id ORDER BY 2 DESC LIMIT 10;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- should be able to pushdown since reference table is in the
@@ -591,6 +723,8 @@ SELECT * FROM
               user_id > 2 and value_2 = 1) as foo_in ON (event_val_2 = user_id)) as foo LEFT JOIN
            (SELECT user_id as user_user_id FROM users_table) as fooo ON (user_id = user_user_id)) as bar
 ORDER BY 1;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
  user_id
 ---------------------------------------------------------------------
        3
@@ -617,6 +751,8 @@ SELECT * FROM
             WHERE
               user_id > 2 and value_2 = 1) as foo_in ON (event_val_2 = user_id)) as foo LEFT JOIN
            (SELECT user_id as user_user_id FROM users_table) as fooo ON (user_id = user_user_id)) as bar;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- we could even support the following where the subquery
@@ -628,13 +764,15 @@ FROM
    FROM events_reference_table
    INNER JOIN users_table ON (users_table.user_id = events_reference_table.user_id) GROUP BY users_table.user_id) AS events_all
 LEFT JOIN events_table ON (events_all.usr_id = events_table.user_id) GROUP BY 2 ORDER BY 1 DESC, 2 DESC LIMIT 5;
- max | usr_id
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+ max  | usr_id
 ---------------------------------------------------------------------
- 432 |      2
- 391 |      4
- 364 |      5
- 357 |      3
- 105 |      1
+ 2592 |      2
+ 2346 |      4
+ 2184 |      5
+ 2142 |      3
+  630 |      1
 (5 rows)
 
 -- we still support the query when the join involving reference table is wrapped with a subquery
@@ -651,13 +789,15 @@ GROUP BY 2
 ORDER BY 1 DESC,
          2 DESC
 LIMIT 5;
- max | usr_id
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+ max  | usr_id
 ---------------------------------------------------------------------
- 432 |      2
- 391 |      4
- 364 |      5
- 357 |      3
- 105 |      1
+ 2592 |      2
+ 2346 |      4
+ 2184 |      5
+ 2142 |      3
+  630 |      1
 (5 rows)
 
 -- should be fine even if the tables are deep inside subqueries
@@ -677,13 +817,15 @@ GROUP BY 2
 ORDER BY 1 DESC,
          2 DESC
 LIMIT 5;
- max | usr_id
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+ max  | usr_id
 ---------------------------------------------------------------------
- 432 |      2
- 391 |      4
- 364 |      5
- 357 |      3
- 105 |      1
+ 2592 |      2
+ 2346 |      4
+ 2184 |      5
+ 2142 |      3
+  630 |      1
 (5 rows)
 
 -- should be fine with FULL join as well
@@ -700,13 +842,15 @@ GROUP BY 2
 ORDER BY 1 DESC,
          2 DESC
 LIMIT 5;
- max | usr_id
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+ max  | usr_id
 ---------------------------------------------------------------------
- 432 |      2
- 391 |      4
- 364 |      5
- 357 |      3
- 105 |      1
+ 2592 |      2
+ 2346 |      4
+ 2184 |      5
+ 2142 |      3
+  630 |      1
 (5 rows)
 
 -- two levels of "(ref_table JOIN dist_table) LEFT JOIN"
@@ -729,6 +873,8 @@ FROM
 	LEFT JOIN (SELECT *,random() FROM (SELECT *, random() FROM  events_table)  as events_table) as events_table ON (events_all.usr_id = events_table.user_id)
 	LEFT JOIN users_table USING (user_id)
 ORDER BY 1,2,3,4 LIMIT 5;
+WARNING:  list_length before removal: 22
+WARNING:  list_length after removal: 9
  user_id |              time               | value_1 | value_2 | value_3 | value_4
 ---------------------------------------------------------------------
        1 | Wed Nov 22 22:51:43.132261 2017 |       4 |       0 |       3 |
@@ -757,9 +903,11 @@ WHERE user_id IN
                   random()
            FROM users_table AS tt1
            JOIN events_reference_table AS REF ON tt1.user_id = ref.user_id) subquery_2_inner) subquery_2 ON subquery_1.user_id = subquery_2.user_id);
+WARNING:  list_length before removal: 9
+WARNING:  list_length after removal: 6
  count
 ---------------------------------------------------------------------
-   101
+   202
 (1 row)
 
 -- we should be able to support OUTER joins involving
@@ -781,9 +929,11 @@ RIGHT JOIN
                 random()
          FROM users_table AS tt1
          JOIN events_reference_table AS REF ON tt1.user_id = ref.user_id) subquery_2_inner) subquery_2 ON subquery_1.user_id = subquery_2.user_id) AS foo USING (user_id);
-  count
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 6
+   count
 ---------------------------------------------------------------------
- 12664199
+ 607881552
 (1 row)
 
 -- LATERAL JOINs used with INNER JOINs with reference tables
@@ -847,6 +997,8 @@ FROM
 ORDER BY
   user_id DESC
 LIMIT 10;
+WARNING:  list_length before removal: 10
+WARNING:  list_length after removal: 3
  user_id |            lastseen
 ---------------------------------------------------------------------
        1 | Thu Nov 23 21:54:46.924477 2017
@@ -904,6 +1056,8 @@ GROUP BY
   "generated_group_field"
 ORDER BY
   generated_group_field DESC, value DESC;
+WARNING:  list_length before removal: 12
+WARNING:  list_length after removal: 5
  value | generated_group_field
 ---------------------------------------------------------------------
      2 |                     5
@@ -950,14 +1104,16 @@ FROM
     ) segmentalias_1) "tempQuery"
 GROUP BY "value_3"
 ORDER BY cnt, value_3 DESC LIMIT 10;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  value_3 | cnt
 ---------------------------------------------------------------------
-       0 |   7
-      10 |  21
-       4 |  21
-       8 |  28
-       6 |  28
-       2 |  35
+       0 |  63
+      10 | 189
+       4 | 189
+       8 | 252
+       6 | 252
+       2 | 315
 (6 rows)
 
 -- nested LATERAL JOINs with reference tables
@@ -1005,15 +1161,21 @@ LIMIT 10) "some_users"
 ORDER BY
   value_3 DESC
 LIMIT 10;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  user_id | value_3
 ---------------------------------------------------------------------
        3 |       5
        3 |       5
        3 |       5
+       3 |       5
+       3 |       5
+       3 |       5
+       3 |       5
+       3 |       5
+       3 |       5
        4 |       4
-       4 |       4
-       4 |       4
-(6 rows)
+(10 rows)
 
 SET citus.subquery_pushdown to OFF;
 -- LEFT JOINs used with INNER JOINs should not error out since reference table joined
@@ -1054,14 +1216,16 @@ count(*) AS cnt, "generated_group_field"
   ORDER BY
     cnt DESC, generated_group_field ASC
   LIMIT 10;
- cnt | generated_group_field
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
+ cnt  | generated_group_field
 ---------------------------------------------------------------------
- 336 |                     2
- 210 |                     1
- 210 |                     3
- 126 |                     4
- 126 |                     5
-  84 |                     0
+ 4032 |                     2
+ 2520 |                     1
+ 2520 |                     3
+ 1512 |                     4
+ 1512 |                     5
+ 1008 |                     0
 (6 rows)
 
   -- RIGHT JOINs used with INNER JOINs should error out since reference table exist in the
@@ -1102,6 +1266,8 @@ count(*) AS cnt, "generated_group_field"
   ORDER BY
     cnt DESC, generated_group_field ASC
   LIMIT 10;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- right join where the inner part of the join includes a reference table
@@ -1133,11 +1299,13 @@ FROM (
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event
 ORDER BY user_id;
- user_id | sum | length | hasdone_event
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+ user_id | sum  | length | hasdone_event
 ---------------------------------------------------------------------
-       2 |  72 |     14 | Has done event
-       3 | 238 |     14 | Has done event
-         |   1 |     14 | Has done event
+       2 |  432 |     14 | Has done event
+       3 | 1428 |     14 | Has done event
+         |    1 |     14 | Has done event
 (3 rows)
 
 -- a similar query as the above, with non-partition key comparison
@@ -1168,11 +1336,13 @@ FROM (
   GROUP BY  t1.user_id, hasdone_event
 ) t GROUP BY user_id, hasdone_event
 ORDER BY user_id;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  user_id | sum | length | hasdone_event
 ---------------------------------------------------------------------
-       1 |  55 |     14 | Has done event
-       2 |  88 |     14 | Has done event
-       3 |  83 |     14 | Has done event
+       1 | 330 |     14 | Has done event
+       2 | 528 |     14 | Has done event
+       3 | 498 |     14 | Has done event
 (3 rows)
 
 -- LEFT JOINs used with INNER JOINs
@@ -1214,14 +1384,16 @@ count(*) AS cnt, "generated_group_field"
   ORDER BY
     cnt DESC, generated_group_field ASC
   LIMIT 10;
- cnt | generated_group_field
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+ cnt  | generated_group_field
 ---------------------------------------------------------------------
- 737 |                     5
- 679 |                     1
- 591 |                     2
- 479 |                     3
- 374 |                     4
- 159 |                     0
+ 8794 |                     5
+ 8048 |                     1
+ 6942 |                     2
+ 5638 |                     3
+ 4348 |                     4
+ 1848 |                     0
 (6 rows)
 
   -- Outer subquery with reference table
@@ -1254,6 +1426,8 @@ FROM
 ORDER BY
   user_id
 limit 50;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
  --
@@ -1318,6 +1492,16 @@ INNER JOIN
 ORDER BY
   types
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  types
 ---------------------------------------------------------------------
      0
@@ -1398,11 +1582,13 @@ GROUP BY
   types
 ORDER BY
   types;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  types | sumofeventtype
 ---------------------------------------------------------------------
-     0 |            217
-     2 |            191
-     3 |             31
+     0 |            434
+     2 |            382
+     3 |             62
 (3 rows)
 
 --
@@ -1458,12 +1644,22 @@ INNER JOIN
       WHERE value_1 > 2 and value_1 < 4) AS t ON (t.user_id = q.user_id)) as final_query
 GROUP BY types
 ORDER BY types;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  types | sumofeventtype
 ---------------------------------------------------------------------
-     0 |            191
-     1 |            191
-     2 |             31
-     3 |            120
+     0 |            764
+     1 |            764
+     2 |            186
+     3 |            480
 (4 rows)
 
 -- just a sanity check that we don't allow this if the reference table is on the
@@ -1471,6 +1667,8 @@ ORDER BY types;
 SELECT count(*) FROM
   (SELECT random() FROM users_ref_test_table LEFT JOIN user_buy_test_table
   ON user_buy_test_table.item_id > users_ref_test_table.id) subquery_1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- we do allow non equi join among subqueries via recursive planning
@@ -1481,11 +1679,15 @@ SELECT count(*) FROM
 (SELECT user_buy_test_table.user_id, random() FROM user_buy_test_table LEFT JOIN users_ref_test_table
   ON user_buy_test_table.user_id > users_ref_test_table.id) subquery_2
 WHERE subquery_1.user_id != subquery_2.user_id ;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 5
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 2
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_buy_test_table.user_id, random() AS random FROM (public.user_buy_test_table LEFT JOIN public.users_ref_test_table ON ((user_buy_test_table.user_id OPERATOR(pg_catalog.>) users_ref_test_table.id)))
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS count FROM (SELECT user_buy_test_table.user_id, random() AS random FROM (public.user_buy_test_table LEFT JOIN public.users_ref_test_table ON ((user_buy_test_table.item_id OPERATOR(pg_catalog.>) users_ref_test_table.id)))) subquery_1, (SELECT intermediate_result.user_id, intermediate_result.random FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, random double precision)) subquery_2 WHERE (subquery_1.user_id OPERATOR(pg_catalog.<>) subquery_2.user_id)
  count
 ---------------------------------------------------------------------
-    67
+   250
 (1 row)
 
 -- we could not push this query not due to non colocated
@@ -1527,6 +1729,10 @@ count(*) AS cnt, "generated_group_field"
   ORDER BY
     cnt DESC, generated_group_field ASC
   LIMIT 10;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 DEBUG:  generating subplan XXX_1 for subquery SELECT user_id, value_2 AS generated_group_field FROM public.users_table users
 DEBUG:  Plan XXX query after replacing subqueries and CTEs: SELECT count(*) AS cnt, generated_group_field FROM (SELECT "eventQuery".user_id, random() AS random, "eventQuery".generated_group_field FROM (SELECT multi_group_wrapper_1."time", multi_group_wrapper_1.event_user_id, multi_group_wrapper_1.user_id, left_group_by_1.generated_group_field, random() AS random FROM ((SELECT temp_data_queries."time", temp_data_queries.event_user_id, user_filters_1.user_id FROM ((SELECT events."time", events.user_id AS event_user_id FROM public.events_table events WHERE (events.user_id OPERATOR(pg_catalog.>) 2)) temp_data_queries JOIN (SELECT users.user_id FROM public.users_reference_table users WHERE ((users.user_id OPERATOR(pg_catalog.>) 2) AND (users.value_2 OPERATOR(pg_catalog.=) 5))) user_filters_1 ON ((temp_data_queries.event_user_id OPERATOR(pg_catalog.<) user_filters_1.user_id)))) multi_group_wrapper_1 RIGHT JOIN (SELECT intermediate_result.user_id, intermediate_result.generated_group_field FROM read_intermediate_result('XXX_1'::text, 'binary'::citus_copy_format) intermediate_result(user_id integer, generated_group_field integer)) left_group_by_1 ON ((left_group_by_1.user_id OPERATOR(pg_catalog.>) multi_group_wrapper_1.event_user_id)))) "eventQuery") "pushedDownQuery" GROUP BY generated_group_field ORDER BY (count(*)) DESC, generated_group_field LIMIT 10
 ERROR:  cannot pushdown the subquery
@@ -1554,12 +1760,16 @@ WHERE
 GROUP BY 1
 ORDER BY 2 DESC, 1 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  complex joins are only supported when all distributed tables are co-located and joined on their distribution columns
 SELECT foo.user_id FROM
 (
   SELECT m.user_id, random() FROM users_table m JOIN events_reference_table r ON int4eq(m.user_id, r.user_id)
   WHERE event_type > 100
 ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
 (0 rows)
@@ -1572,6 +1782,10 @@ SELECT foo.user_id FROM
   GROUP BY r.user_id
 ) as foo
 ORDER BY 1 DESC;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        6
@@ -1590,6 +1804,8 @@ SELECT foo.user_id FROM
   GROUP BY r.user_id, m.user_id
 ) as foo
 ORDER BY 1 LIMIT 3;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1605,6 +1821,10 @@ SELECT foo.user_id FROM
 ) as foo
 ORDER BY 1 DESC
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        6
@@ -1620,6 +1840,10 @@ SELECT foo.user_id FROM
 (
   SELECT DISTINCT ON(r.user_id) r.user_id, random() FROM users_table m JOIN events_reference_table r ON int4eq(m.user_id, r.user_id)
 ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1636,6 +1860,8 @@ SELECT foo.user_id FROM
   SELECT DISTINCT ON(r.user_id, m.user_id) r.user_id, random() FROM users_table m JOIN events_reference_table r ON int4eq(m.user_id, r.user_id)
 ) as foo
 ORDER BY 1 LIMIT 3;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1653,13 +1879,15 @@ FROM
 ORDER BY time DESC
 LIMIT 5
 OFFSET 0;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  distinct_users | event_type |              time
 ---------------------------------------------------------------------
               1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              4 |          1 | Thu Nov 23 18:10:21.338399 2017
               4 |          1 | Thu Nov 23 18:10:21.338399 2017
               3 |          2 | Thu Nov 23 18:08:26.550729 2017
-              2 |          1 | Thu Nov 23 17:26:14.563216 2017
-              3 |          4 | Thu Nov 23 16:44:41.903713 2017
 (5 rows)
 
 -- the same query wuth multiple reference tables in the subquery
@@ -1673,13 +1901,15 @@ ON (events_dist.user_id = users_ref.distinct_users)
 ORDER BY time DESC
 LIMIT 5
 OFFSET 0;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  distinct_users | event_type |              time
 ---------------------------------------------------------------------
               1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              4 |          1 | Thu Nov 23 18:10:21.338399 2017
               4 |          1 | Thu Nov 23 18:10:21.338399 2017
               3 |          2 | Thu Nov 23 18:08:26.550729 2017
-              2 |          1 | Thu Nov 23 17:26:14.563216 2017
-              3 |          4 | Thu Nov 23 16:44:41.903713 2017
 (5 rows)
 
 -- similar query as the above, but with group bys
@@ -1691,13 +1921,15 @@ FROM
 ORDER BY time DESC
 LIMIT 5
 OFFSET 0;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  distinct_users | event_type |              time
 ---------------------------------------------------------------------
               1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              1 |          6 | Thu Nov 23 21:54:46.924477 2017
+              4 |          1 | Thu Nov 23 18:10:21.338399 2017
               4 |          1 | Thu Nov 23 18:10:21.338399 2017
               3 |          2 | Thu Nov 23 18:08:26.550729 2017
-              2 |          1 | Thu Nov 23 17:26:14.563216 2017
-              3 |          4 | Thu Nov 23 16:44:41.903713 2017
 (5 rows)
 
 -- should not push down this query since there is a distributed table (i.e., events_table)
@@ -1707,6 +1939,10 @@ SELECT * FROM
 (
   SELECT DISTINCT users_reference_table.user_id FROM users_reference_table, events_table WHERE users_reference_table.user_id = events_table.value_4
 ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
 (0 rows)
@@ -1716,6 +1952,10 @@ SELECT * FROM
   SELECT users_reference_table.user_id FROM users_reference_table, events_table WHERE users_reference_table.user_id = events_table.value_4
   GROUP BY 1
 ) as foo;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
 (0 rows)
@@ -1727,6 +1967,10 @@ SELECT * FROM
   SELECT DISTINCT users_reference_table.user_id FROM users_reference_table, (SELECT user_id, random() FROM events_table) as us_events WHERE users_reference_table.user_id = us_events.user_id
 ) as foo
 ORDER BY 1;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1744,6 +1988,8 @@ SELECT * FROM
 ) as foo
 ORDER BY 1 DESC
 LIMIT 4;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | user_id
 ---------------------------------------------------------------------
        6 |       6
@@ -1767,6 +2013,10 @@ SELECT * FROM
 ) as foo
 ORDER BY 1 DESC
 LIMIT 4;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id | value_4
 ---------------------------------------------------------------------
        6 |
@@ -1797,6 +2047,8 @@ GROUP BY res.val_square) squares
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1814,6 +2066,8 @@ JOIN
    FROM read_intermediate_result('squares', 'binary') AS res (val int, val_square int)) squares ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1838,6 +2092,8 @@ squares
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1863,6 +2119,8 @@ GROUP BY res2.val_square) squares
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  user_id
 ---------------------------------------------------------------------
        1
@@ -1887,6 +2145,8 @@ FROM
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
  user_id
 ---------------------------------------------------------------------
        1
@@ -1912,6 +2172,10 @@ JOIN
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        1
@@ -1932,6 +2196,8 @@ FROM
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        5
@@ -1956,6 +2222,10 @@ JOIN
  ON (mx = user_id)
 ORDER BY 1
 LIMIT 5;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 2
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  user_id
 ---------------------------------------------------------------------
        6
@@ -1964,99 +2234,153 @@ LIMIT 5;
 -- outer part of the LEFT JOIN consists only reference tables, so we cannot push down
 -- we have different combinations for ON condition, true/false/two column join/single column filter
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON false;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON false;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (ref1.id > 5);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (user_buy_test_table.user_id > 5);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (ref1.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (ref2.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (ref1.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id LEFT JOIN user_buy_test_table ON (ref2.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- outer part of the LEFT JOIN consists only reference tables within a subquery, so we cannot push down
 -- we have different combinations for ON condition, true/false/two column join/single column filter
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON false;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON false;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON (foo.id > 5);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 LEFT JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON (user_buy_test_table.user_id > 19);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as foo LEFT JOIN user_buy_test_table ON (foo.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- one example where unsupported outer join is deep inside a subquery
 SELECT *, random() FROM (
 SELECT *,random() FROM user_buy_test_table WHERE user_id > (
 SELECT count(*) FROM (SELECT *,random() FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id) as bar) as foo LEFT JOIN (SELECT *, random() FROM (SELECT *,random() FROM user_buy_test_table d1 JOIN user_buy_test_table d2 USING (user_id)) as bar_inner ) as bar ON true)) as boo;
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
+WARNING:  list_length before removal: 6
+WARNING:  list_length after removal: 4
 ERROR:  cannot pushdown the subquery
 DETAIL:  There exist a reference table in the outer part of the outer join
 -- In theory, we should be able to pushdown this query
 -- however, as the LEFT JOIN condition is between a reference table and the distributed table
 -- Postgres generates a LEFT JOIN alternative among those tables
 SELECT count(*) FROM (SELECT ref1.*, random() FROM users_ref_test_table ref1 INNER JOIN user_buy_test_table u1 on ref1.id = u1.user_id) as foo LEFT JOIN user_buy_test_table ON (foo.id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot pushdown the subquery
 DETAIL:  Complex subqueries and CTEs cannot be in the outer part of the outer join
 -- same as the above query, but this time LEFT JOIN condition is between distributed tables
 -- so Postgres doesn't generate join restriction between reference and distributed tables
 SELECT count(*) FROM (SELECT u1.*, random() FROM users_ref_test_table ref1 INNER JOIN user_buy_test_table u1 on ref1.id = u1.user_id) as foo LEFT JOIN user_buy_test_table ON (foo.user_id = user_buy_test_table.user_id);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
-     3
+     6
 (1 row)
 
 -- outer part of the LEFT JOIN consists only intermediate result due to LIMIT, so we cannot push down
 SELECT count(*) FROM (SELECT ref1.* FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id LIMIT 5) as foo LEFT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
 ERROR:  cannot pushdown the subquery
 DETAIL:  Complex subqueries and CTEs cannot be in the outer part of the outer join
 -- should be fine as OUTER part is the distributed table
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id RIGHT JOIN user_buy_test_table ON true;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
-    24
+    96
 (1 row)
 
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id RIGHT JOIN user_buy_test_table ON false;
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
      4
 (1 row)
 
 SELECT count(*) FROM users_ref_test_table ref1 INNER JOIN users_ref_test_table ref2 on ref1.id = ref2.id RIGHT JOIN user_buy_test_table ON (ref1.id = user_id);
+WARNING:  list_length before removal: 4
+WARNING:  list_length after removal: 3
  count
 ---------------------------------------------------------------------
-     4
+    13
 (1 row)
 
 DROP TABLE user_buy_test_table;

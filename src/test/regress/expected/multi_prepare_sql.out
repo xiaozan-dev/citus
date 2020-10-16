@@ -102,30 +102,40 @@ ORDER BY
 SET client_min_messages TO INFO;
 -- execute prepared statements
 EXECUTE prepared_test_1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
   2985
 (1 row)
 
 EXECUTE prepared_test_2;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  12000
 (1 row)
 
 EXECUTE prepared_test_3;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
   1956
 (1 row)
 
 EXECUTE prepared_test_4;
+WARNING:  list_length before removal: 8
+WARNING:  list_length after removal: 2
  count
 ---------------------------------------------------------------------
   7806
 (1 row)
 
 EXECUTE prepared_test_5;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
     39
@@ -133,24 +143,32 @@ EXECUTE prepared_test_5;
 
 -- execute prepared statements with different parameters
 EXECUTE prepared_test_6(155);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  11813
 (1 row)
 
 EXECUTE prepared_test_6(1555);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  10185
 (1 row)
 
 EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
+WARNING:  list_length before removal: 150
+WARNING:  list_length after removal: 11
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  UNITED KINGDOM            | CHINA                     |   1996 | 18560.2200
 (1 row)
 
 EXECUTE prepared_test_7('FRANCE', 'GERMANY');
+WARNING:  list_length before removal: 150
+WARNING:  list_length after removal: 11
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  GERMANY                   | FRANCE                    |   1995 | 2399.2948
@@ -158,6 +176,8 @@ EXECUTE prepared_test_7('FRANCE', 'GERMANY');
 
 -- now, execute prepared statements with random order
 EXECUTE prepared_test_6(155);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  11813
@@ -170,6 +190,8 @@ EXECUTE prepared_test_3;
 (1 row)
 
 EXECUTE prepared_test_7('FRANCE', 'GERMANY');
+WARNING:  list_length before removal: 150
+WARNING:  list_length after removal: 11
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  GERMANY                   | FRANCE                    |   1995 | 2399.2948
@@ -188,6 +210,8 @@ EXECUTE prepared_test_1;
 (1 row)
 
 EXECUTE prepared_test_6(1555);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  10185
@@ -200,6 +224,8 @@ EXECUTE prepared_test_4;
 (1 row)
 
 EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
+WARNING:  list_length before removal: 150
+WARNING:  list_length after removal: 11
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
  UNITED KINGDOM            | CHINA                     |   1996 | 18560.2200
@@ -213,6 +239,8 @@ EXECUTE prepared_test_2;
 
 -- CREATE TABLE ... AS EXECUTE prepared_statement tests
 CREATE TEMP TABLE prepared_sql_test_7 AS EXECUTE prepared_test_7('UNITED KINGDOM', 'CHINA');
+WARNING:  list_length before removal: 150
+WARNING:  list_length after removal: 11
 SELECT * from prepared_sql_test_7;
         supp_nation        |        cust_nation        | l_year |  revenue
 ---------------------------------------------------------------------
@@ -222,12 +250,16 @@ SELECT * from prepared_sql_test_7;
 -- now, run some of the tests with real-time executor
 -- execute prepared statements
 EXECUTE prepared_test_1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
   2985
 (1 row)
 
 EXECUTE prepared_test_2;
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  12000
@@ -235,12 +267,18 @@ EXECUTE prepared_test_2;
 
 -- execute prepared statements with different parameters
 EXECUTE prepared_test_6(155);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  11813
 (1 row)
 
 EXECUTE prepared_test_6(1555);
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
+WARNING:  list_length before removal: 2
+WARNING:  list_length after removal: 1
  count
 ---------------------------------------------------------------------
  10185
@@ -268,46 +306,70 @@ SELECT create_distributed_table('router_executor_table', 'id', 'hash');
 PREPARE prepared_insert(varchar(20)) AS
 	INSERT INTO router_executor_table VALUES (1, $1, $2);
 EXECUTE prepared_insert('comment-1', '(1, 10)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_insert('comment-2', '(2, 20)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_insert('comment-3', '(3, 30)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_insert('comment-4', '(4, 40)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_insert('comment-5', '(5, 50)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_insert('comment-6', '(6, 60)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- to make this work, Citus adds the type casting for composite keys
 -- during the deparsing
 PREPARE prepared_custom_type_select(test_composite_type) AS
 	SELECT count(*) FROM router_executor_table WHERE id = 1 AND stats = $1;
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
@@ -326,36 +388,48 @@ SET search_path TO internal_test_schema;
 PREPARE prepared_custom_type_select_with_search_path(public.test_composite_type) AS
 	SELECT count(*) FROM public.router_executor_table WHERE id = 1 AND stats = $1;
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
 (1 row)
 
 EXECUTE prepared_custom_type_select_with_search_path('(1,1)');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      0
@@ -377,6 +451,8 @@ EXECUTE prepared_custom_type_select_with_search_path('(1,1)'::public.test_compos
 DROP SCHEMA internal_test_schema CASCADE;
 SET search_path TO public;
 SELECT * FROM router_executor_table ORDER BY comment;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  id |  comment  | stats
 ---------------------------------------------------------------------
   1 | comment-1 | (1,10)
@@ -392,36 +468,48 @@ PREPARE prepared_select(integer, integer) AS
 	SELECT count(*) FROM router_executor_table
 		WHERE id = 1 AND stats = ROW($1, $2)::test_composite_type;
 EXECUTE prepared_select(1, 10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
 (1 row)
 
 EXECUTE prepared_select(2, 20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
 (1 row)
 
 EXECUTE prepared_select(3, 30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
 (1 row)
 
 EXECUTE prepared_select(4, 40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
 (1 row)
 
 EXECUTE prepared_select(5, 50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
 (1 row)
 
 EXECUTE prepared_select(6, 60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      1
@@ -432,11 +520,23 @@ PREPARE prepared_partition_column_insert(bigint) AS
 INSERT INTO router_executor_table VALUES ($1, 'arsenous', '(1,10)');
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_partition_column_insert(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_column_insert(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_column_insert(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_column_insert(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_column_insert(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_column_insert(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- suppress notice message caused by DROP ... CASCADE to prevent pg version difference
 SET client_min_messages TO 'WARNING';
 DROP TYPE test_composite_type CASCADE;
@@ -458,6 +558,8 @@ PREPARE prepared_no_parameter_insert AS
 	INSERT INTO prepare_table (key) VALUES (0);
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_no_parameter_insert;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_no_parameter_insert;
 EXECUTE prepared_no_parameter_insert;
 EXECUTE prepared_no_parameter_insert;
@@ -467,40 +569,90 @@ PREPARE prepared_single_parameter_insert(int) AS
 	INSERT INTO prepare_table (key) VALUES ($1);
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_single_parameter_insert(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_single_parameter_insert(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_single_parameter_insert(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_single_parameter_insert(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_single_parameter_insert(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_single_parameter_insert(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 PREPARE prepared_double_parameter_insert(int, int) AS
 	INSERT INTO prepare_table (key, value) VALUES ($1, $2);
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_double_parameter_insert(1, 10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_double_parameter_insert(2, 20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_double_parameter_insert(3, 30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_double_parameter_insert(4, 40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_double_parameter_insert(5, 50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_double_parameter_insert(6, 60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 PREPARE prepared_multi_insert(int, int) AS
 	INSERT INTO prepare_table (key, value) VALUES ($1, $2), ($1 + 1, $2 + 10);
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_multi_insert( 7,  70);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_multi_insert( 9,  90);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_multi_insert(11, 110);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_multi_insert(13, 130);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_multi_insert(15, 150);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_multi_insert(17, 170);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 PREPARE prepared_non_partition_parameter_insert(int) AS
 	INSERT INTO prepare_table (key, value) VALUES (0, $1);
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_non_partition_parameter_insert(10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_insert(20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_insert(30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_insert(40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_insert(50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_insert(60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- check inserted values
 SELECT * FROM prepare_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -542,6 +694,8 @@ SELECT * FROM prepare_table ORDER BY key, value;
 (36 rows)
 
 DELETE FROM prepare_table WHERE value >= 70;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- check router executor select
 PREPARE prepared_router_partition_column_select(int) AS
 	SELECT
@@ -555,6 +709,8 @@ PREPARE prepared_router_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_router_partition_column_select(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    1 |    10
@@ -562,6 +718,8 @@ EXECUTE prepared_router_partition_column_select(1);
 (2 rows)
 
 EXECUTE prepared_router_partition_column_select(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    2 |    20
@@ -569,6 +727,8 @@ EXECUTE prepared_router_partition_column_select(2);
 (2 rows)
 
 EXECUTE prepared_router_partition_column_select(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    3 |    30
@@ -576,6 +736,8 @@ EXECUTE prepared_router_partition_column_select(3);
 (2 rows)
 
 EXECUTE prepared_router_partition_column_select(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    4 |    40
@@ -583,6 +745,8 @@ EXECUTE prepared_router_partition_column_select(4);
 (2 rows)
 
 EXECUTE prepared_router_partition_column_select(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    5 |    50
@@ -590,6 +754,10 @@ EXECUTE prepared_router_partition_column_select(5);
 (2 rows)
 
 EXECUTE prepared_router_partition_column_select(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    6 |    60
@@ -609,36 +777,48 @@ PREPARE prepared_router_non_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_router_non_partition_column_select(10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
 (1 row)
 
 EXECUTE prepared_router_non_partition_column_select(20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    20
 (1 row)
 
 EXECUTE prepared_router_non_partition_column_select(30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    30
 (1 row)
 
 EXECUTE prepared_router_non_partition_column_select(40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    40
 (1 row)
 
 EXECUTE prepared_router_non_partition_column_select(50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    50
 (1 row)
 
 EXECUTE prepared_router_non_partition_column_select(60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    60
@@ -657,6 +837,8 @@ PREPARE prepared_real_time_non_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_real_time_non_partition_column_select(10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -664,6 +846,8 @@ EXECUTE prepared_real_time_non_partition_column_select(10);
 (2 rows)
 
 EXECUTE prepared_real_time_non_partition_column_select(20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    20
@@ -671,6 +855,8 @@ EXECUTE prepared_real_time_non_partition_column_select(20);
 (2 rows)
 
 EXECUTE prepared_real_time_non_partition_column_select(30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    30
@@ -678,6 +864,8 @@ EXECUTE prepared_real_time_non_partition_column_select(30);
 (2 rows)
 
 EXECUTE prepared_real_time_non_partition_column_select(40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    40
@@ -685,6 +873,8 @@ EXECUTE prepared_real_time_non_partition_column_select(40);
 (2 rows)
 
 EXECUTE prepared_real_time_non_partition_column_select(50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    50
@@ -692,6 +882,10 @@ EXECUTE prepared_real_time_non_partition_column_select(50);
 (2 rows)
 
 EXECUTE prepared_real_time_non_partition_column_select(60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    60
@@ -711,6 +905,8 @@ PREPARE prepared_real_time_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_real_time_partition_column_select(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -719,6 +915,8 @@ EXECUTE prepared_real_time_partition_column_select(1);
 (3 rows)
 
 EXECUTE prepared_real_time_partition_column_select(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -728,6 +926,8 @@ EXECUTE prepared_real_time_partition_column_select(2);
 (4 rows)
 
 EXECUTE prepared_real_time_partition_column_select(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -737,6 +937,8 @@ EXECUTE prepared_real_time_partition_column_select(3);
 (4 rows)
 
 EXECUTE prepared_real_time_partition_column_select(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -746,6 +948,8 @@ EXECUTE prepared_real_time_partition_column_select(4);
 (4 rows)
 
 EXECUTE prepared_real_time_partition_column_select(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -755,6 +959,10 @@ EXECUTE prepared_real_time_partition_column_select(5);
 (4 rows)
 
 EXECUTE prepared_real_time_partition_column_select(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -775,6 +983,8 @@ PREPARE prepared_task_tracker_non_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_task_tracker_non_partition_column_select(10);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -782,6 +992,8 @@ EXECUTE prepared_task_tracker_non_partition_column_select(10);
 (2 rows)
 
 EXECUTE prepared_task_tracker_non_partition_column_select(20);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    20
@@ -789,6 +1001,8 @@ EXECUTE prepared_task_tracker_non_partition_column_select(20);
 (2 rows)
 
 EXECUTE prepared_task_tracker_non_partition_column_select(30);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    30
@@ -796,6 +1010,8 @@ EXECUTE prepared_task_tracker_non_partition_column_select(30);
 (2 rows)
 
 EXECUTE prepared_task_tracker_non_partition_column_select(40);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    40
@@ -803,6 +1019,8 @@ EXECUTE prepared_task_tracker_non_partition_column_select(40);
 (2 rows)
 
 EXECUTE prepared_task_tracker_non_partition_column_select(50);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    50
@@ -810,6 +1028,10 @@ EXECUTE prepared_task_tracker_non_partition_column_select(50);
 (2 rows)
 
 EXECUTE prepared_task_tracker_non_partition_column_select(60);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    60
@@ -829,6 +1051,8 @@ PREPARE prepared_task_tracker_partition_column_select(int) AS
 		key,
 		value;
 EXECUTE prepared_task_tracker_partition_column_select(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -837,6 +1061,8 @@ EXECUTE prepared_task_tracker_partition_column_select(1);
 (3 rows)
 
 EXECUTE prepared_task_tracker_partition_column_select(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -846,6 +1072,8 @@ EXECUTE prepared_task_tracker_partition_column_select(2);
 (4 rows)
 
 EXECUTE prepared_task_tracker_partition_column_select(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -855,6 +1083,8 @@ EXECUTE prepared_task_tracker_partition_column_select(3);
 (4 rows)
 
 EXECUTE prepared_task_tracker_partition_column_select(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -864,6 +1094,8 @@ EXECUTE prepared_task_tracker_partition_column_select(4);
 (4 rows)
 
 EXECUTE prepared_task_tracker_partition_column_select(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -873,6 +1105,10 @@ EXECUTE prepared_task_tracker_partition_column_select(5);
 (4 rows)
 
 EXECUTE prepared_task_tracker_partition_column_select(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    10
@@ -886,22 +1122,50 @@ PREPARE prepared_partition_parameter_update(int, int) AS
 	UPDATE prepare_table SET value = $2 WHERE key = $1;
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_partition_parameter_update(1, 11);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_update(2, 21);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_update(3, 31);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_update(4, 41);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_update(5, 51);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_update(6, 61);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 PREPARE prepared_non_partition_parameter_update(int, int) AS
 	UPDATE prepare_table SET value = $2 WHERE key = 0 AND value = $1;
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_non_partition_parameter_update(10, 12);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_update(20, 22);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_update(30, 32);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_update(40, 42);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_update(50, 52);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_update(60, 62);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- check after updates
 SELECT * FROM prepare_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |    12
@@ -934,22 +1198,50 @@ SELECT * FROM prepare_table ORDER BY key, value;
 PREPARE prepared_partition_parameter_delete(int, int) AS
 	DELETE FROM prepare_table WHERE key = $1 AND value = $2;
 EXECUTE prepared_partition_parameter_delete(1, 11);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_delete(2, 21);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_delete(3, 31);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_delete(4, 41);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_delete(5, 51);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_partition_parameter_delete(6, 61);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 PREPARE prepared_non_partition_parameter_delete(int) AS
 	DELETE FROM prepare_table WHERE key = 0 AND value = $1;
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_non_partition_parameter_delete(12);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_delete(22);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_delete(32);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_delete(42);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_delete(52);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_non_partition_parameter_delete(62);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 -- check after deletes
 SELECT * FROM prepare_table ORDER BY key, value;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value
 ---------------------------------------------------------------------
    0 |
@@ -978,12 +1270,26 @@ PREPARE prepared_function_evaluation_insert(int) AS
 	INSERT INTO prepare_func_table (key, value1) VALUES ($1+1, 0*random());
 -- execute 6 times to trigger prepared statement usage
 EXECUTE prepared_function_evaluation_insert(1);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_function_evaluation_insert(2);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_function_evaluation_insert(3);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_function_evaluation_insert(4);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_function_evaluation_insert(5);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_function_evaluation_insert(6);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT key, value1 FROM prepare_func_table ORDER BY key;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value1
 ---------------------------------------------------------------------
  2   |      0
@@ -999,12 +1305,26 @@ TRUNCATE prepare_func_table;
 PREPARE wrapped_parameter_evaluation(text,text[]) AS
 	INSERT INTO prepare_func_table (key,value2) VALUES ($1,array_to_string($2,''));
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE wrapped_parameter_evaluation('key', ARRAY['value']);
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT key, value2 FROM prepare_func_table;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key | value2
 ---------------------------------------------------------------------
  key | value
@@ -1030,12 +1350,26 @@ SELECT create_distributed_table('text_partition_column_table', 'key');
 PREPARE prepared_relabel_insert(varchar) AS
 	INSERT INTO text_partition_column_table VALUES ($1, 1);
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_relabel_insert('test');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT key, value FROM text_partition_column_table ORDER BY key;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  key  | value
 ---------------------------------------------------------------------
  test |     1
@@ -1071,12 +1405,26 @@ SELECT create_distributed_table('domain_partition_column_table', 'key');
 PREPARE prepared_coercion_to_domain_insert(text) AS
 	INSERT INTO domain_partition_column_table VALUES ($1, 1);
 EXECUTE prepared_coercion_to_domain_insert('test-1');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_coercion_to_domain_insert('test-2');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_coercion_to_domain_insert('test-3');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_coercion_to_domain_insert('test-4');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_coercion_to_domain_insert('test-5');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE prepared_coercion_to_domain_insert('test-6');
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 SELECT key, value FROM domain_partition_column_table ORDER BY key;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
   key   | value
 ---------------------------------------------------------------------
  test-1 |     1
@@ -1112,12 +1460,16 @@ PREPARE FOO AS INSERT INTO http_request (
   inet '88.250.10.123', 200, 10
 );
 EXECUTE foo;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
 EXECUTE foo;
 EXECUTE foo;
 EXECUTE foo;
 EXECUTE foo;
 EXECUTE foo;
 SELECT count(distinct ingest_time) FROM http_request WHERE site_id = 1;
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
      6
@@ -1152,6 +1504,8 @@ SELECT create_distributed_table('test_table', 'test_id', 'hash');
 --plain statement, needs planning
 SELECT count(*) FROM test_table HAVING COUNT(*) = immutable_bleat('replanning');
 NOTICE:  replanning
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
 (0 rows)
@@ -1160,6 +1514,8 @@ NOTICE:  replanning
 PREPARE countsome AS SELECT count(*) FROM test_table HAVING COUNT(*) = immutable_bleat('replanning');
 EXECUTE countsome; -- should indicate planning
 NOTICE:  replanning
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
 (0 rows)
@@ -1176,6 +1532,8 @@ WHERE shardid IN (
     AND nodeport = :worker_1_port;
 EXECUTE countsome; -- should indicate replanning
 NOTICE:  replanning
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
 (0 rows)
@@ -1199,6 +1557,8 @@ WHERE shardid IN (
 
 EXECUTE countsome; -- should indicate replanning
 NOTICE:  replanning
+WARNING:  list_length before removal: 0
+WARNING:  list_length after removal: 0
  count
 ---------------------------------------------------------------------
 (0 rows)
