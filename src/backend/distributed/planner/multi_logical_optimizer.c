@@ -4336,6 +4336,11 @@ GroupedByColumn(List *groupClauseList, List *targetList, Var *column)
 {
 	bool groupedByColumn = false;
 
+	if (column == NULL)
+	{
+		return false;
+	}
+
 	SortGroupClause *groupClause = NULL;
 	foreach_ptr(groupClause, groupClauseList)
 	{
@@ -4490,7 +4495,16 @@ FindReferencedTableColumn(Expr *columnExpression, List *parentQueryList, Query *
 		return;
 	}
 
-	Index rangeTableEntryIndex = candidateColumn->varno - 1;
+	if (candidateColumn->varattno == InvalidAttrNumber)
+	{
+		/*
+		 * varattno can be 0 in case of SELECT table FROM table, but that Var
+		 * definitely does not correspond to a specific column.
+		 */
+		return;
+	}
+
+	int rangeTableEntryIndex = candidateColumn->varno - 1;
 	RangeTblEntry *rangeTableEntry = list_nth(rangetableList, rangeTableEntryIndex);
 
 	if (rangeTableEntry->rtekind == RTE_RELATION)
