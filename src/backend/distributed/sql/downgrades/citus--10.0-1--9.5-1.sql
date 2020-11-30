@@ -4,3 +4,6 @@
 #include "../udfs/citus_finish_pg_upgrade/9.5-1.sql"
 
 #include "../../../columnar/sql/downgrades/columnar--10.0-1--9.5-1.sql"
+
+DROP FUNCTION shard_size(nodename text, nodeport int, logicalrelid regclass, shardId bigint);
+DROP VIEW citus_shards CASCADE;

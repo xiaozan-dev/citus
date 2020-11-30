@@ -427,3 +427,5 @@ WITH shard_counts AS (
 SELECT logicalrelid, colocationid, shard_count, partmethod, repmodel
 FROM pg_dist_partition NATURAL JOIN shard_counts
 ORDER BY colocationid, logicalrelid;
+
+SELECT * FROM citus_shards ORDER BY table_name::text;
