@@ -17,7 +17,7 @@ SELECT
    USING
      (shardid)
    WHERE p.groupid = n.groupid AND t.partmethod <> 'n'
-  ) AS "Shards Stored",
+  ) AS "Distributed Table Shards",
   (SELECT
      count(*)
    FROM
