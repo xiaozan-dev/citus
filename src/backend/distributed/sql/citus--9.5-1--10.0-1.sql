@@ -1,6 +1,8 @@
 -- citus--9.5-1--10.0-1
 
 #include "udfs/citus_tables/10.0-1.sql"
+#include "udfs/citus_local_disk_space_stats/10.0-1.sql"
+#include "udfs/citus_node_disk_space_stats/10.0-1.sql"
 #include "udfs/citus_database_size/10.0-1.sql"
 #include "udfs/citus_node_database_size/10.0-1.sql"
 #include "udfs/citus_nodes/10.0-1.sql"

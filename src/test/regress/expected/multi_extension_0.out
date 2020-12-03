@@ -94,8 +94,9 @@ WHERE pgd.refclassid = 'pg_extension'::regclass AND
 ORDER BY 1, 2;
  type |      identity
 ---------------------------------------------------------------------
+ view | public.citus_nodes
  view | public.citus_tables
-(1 row)
+(2 rows)
 
 -- DROP EXTENSION pre-created by the regression suite
 DROP EXTENSION citus;
@@ -478,14 +479,19 @@ ALTER EXTENSION citus UPDATE TO '10.0-1';
 SELECT * FROM print_extension_changes();
  previous_object |                    current_object
 ---------------------------------------------------------------------
+                 | function citus_database_size(name)
                  | function citus_internal.cstore_ensure_objects_exist()
+                 | function citus_local_disk_space_stats()
+                 | function citus_node_database_size(text,integer,name)
+                 | function citus_node_disk_space_stats(text,integer)
                  | schema cstore
                  | sequence cstore.storageid_seq
                  | table cstore.cstore_skipnodes
                  | table cstore.cstore_stripes
                  | table cstore.options
+                 | view citus_nodes
                  | view citus_tables
-(7 rows)
+(12 rows)
 
 DROP TABLE prev_objects, extension_diff;
 -- show running version
@@ -507,8 +513,9 @@ WHERE pgd.refclassid = 'pg_extension'::regclass AND
 ORDER BY 1, 2;
  type |      identity
 ---------------------------------------------------------------------
+ view | public.citus_nodes
  view | public.citus_tables
-(1 row)
+(2 rows)
 
 -- see incompatible version errors out
 RESET citus.enable_version_checks;
@@ -595,8 +602,9 @@ ALTER EXTENSION citus UPDATE;
             List of relations
  Schema |     Name     | Type |  Owner
 ---------------------------------------------------------------------
+ public | citus_nodes  | view | postgres
  public | citus_tables | view | postgres
-(1 row)
+(2 rows)
 
 \c - - - :master_port
 -- test https://github.com/citusdata/citus/issues/3409
