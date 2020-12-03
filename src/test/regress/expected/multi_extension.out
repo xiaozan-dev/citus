@@ -10,9 +10,9 @@
 -- objects are added in citus_finish_pg_upgrade()
 SHOW server_version \gset
 SELECT substring(:'server_version', '\d+')::int > 11 AS version_above_eleven;
- version_above_eleven
----------------------------------------------------------------------
- t
+ version_above_eleven 
+----------------------
+ f
 (1 row)
 
 SET citus.next_shard_id TO 580000;
@@ -77,8 +77,8 @@ CREATE SCHEMA test;
 SELECT datname, current_database(),
     usename, (SELECT extowner::regrole::text FROM pg_extension WHERE extname = 'citus')
 FROM test.maintenance_worker();
-  datname   | current_database | usename  | extowner
----------------------------------------------------------------------
+  datname   | current_database | usename  | extowner 
+------------+------------------+----------+----------
  regression | regression       | postgres | postgres
 (1 row)
 
@@ -92,10 +92,11 @@ WHERE pgd.refclassid = 'pg_extension'::regclass AND
 	  pge.extname    = 'citus' AND
 	  pgio.schema    NOT IN ('pg_catalog', 'citus', 'citus_internal', 'test', 'cstore')
 ORDER BY 1, 2;
- type |      identity
----------------------------------------------------------------------
+ type |      identity       
+------+---------------------
+ view | public.citus_nodes
  view | public.citus_tables
-(1 row)
+(2 rows)
 
 -- DROP EXTENSION pre-created by the regression suite
 DROP EXTENSION citus;
@@ -162,8 +163,8 @@ ALTER EXTENSION citus UPDATE TO '9.2-1';
 ALTER EXTENSION citus UPDATE TO '9.2-2';
 -- Snapshot of state at 9.2-2
 SELECT * FROM print_extension_changes();
- previous_object |                                              current_object
----------------------------------------------------------------------
+ previous_object |                                              current_object                                              
+-----------------+----------------------------------------------------------------------------------------------------------
                  | event trigger citus_cascade_to_partition
                  | function alter_role_if_exists(text,text)
                  | function any_value(anyelement)
@@ -359,8 +360,8 @@ ALTER EXTENSION citus UPDATE TO '9.2-4';
 ALTER EXTENSION citus UPDATE TO '9.2-2';
 -- Should be empty result since upgrade+downgrade should be a no-op
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 /*
@@ -374,8 +375,8 @@ ERROR:  extension "citus" has no update path from version "9.2-2" to version "9.
 ALTER EXTENSION citus UPDATE TO '9.2-4';
 -- Snapshot of state at 9.2-4
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 -- Test downgrade to 9.2-4 from 9.3-2
@@ -383,15 +384,15 @@ ALTER EXTENSION citus UPDATE TO '9.3-2';
 ALTER EXTENSION citus UPDATE TO '9.2-4';
 -- Should be empty result since upgrade+downgrade should be a no-op
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 -- Snapshot of state at 9.3-2
 ALTER EXTENSION citus UPDATE TO '9.3-2';
 SELECT * FROM print_extension_changes();
- previous_object |                         current_object
----------------------------------------------------------------------
+ previous_object |                         current_object                          
+-----------------+-----------------------------------------------------------------
                  | function citus_remote_connection_stats()
                  | function replicate_reference_tables()
                  | function truncate_local_data_after_distributing_table(regclass)
@@ -404,15 +405,15 @@ ALTER EXTENSION citus UPDATE TO '9.4-1';
 ALTER EXTENSION citus UPDATE TO '9.3-2';
 -- Should be empty result since upgrade+downgrade should be a no-op
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 -- Snapshot of state at 9.4-1
 ALTER EXTENSION citus UPDATE TO '9.4-1';
 SELECT * FROM print_extension_changes();
- previous_object |                     current_object
----------------------------------------------------------------------
+ previous_object |                     current_object                     
+-----------------+--------------------------------------------------------
                  | function worker_last_saved_explain_analyze()
                  | function worker_save_query_explain_analyze(text,jsonb)
 (2 rows)
@@ -421,16 +422,16 @@ SELECT * FROM print_extension_changes();
 ALTER EXTENSION citus UPDATE TO '9.5-1';
 BEGIN;
   SELECT master_add_node('localhost', :master_port, groupId=>0);
- master_add_node
----------------------------------------------------------------------
+ master_add_node 
+-----------------
                1
 (1 row)
 
   CREATE TABLE citus_local_table (a int);
   SELECT create_citus_local_table('citus_local_table');
- create_citus_local_table
----------------------------------------------------------------------
-
+ create_citus_local_table 
+--------------------------
+ 
 (1 row)
 
   -- downgrade from 9.5-1 to 9.4-1 should fail as we have a citus local table
@@ -443,22 +444,22 @@ ROLLBACK;
 ALTER EXTENSION citus UPDATE TO '9.4-1';
 -- Should be empty result since upgrade+downgrade should be a no-op
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 -- Snapshot of state at 9.5-1
 ALTER EXTENSION citus UPDATE TO '9.5-1';
 SELECT * FROM print_extension_changes();
-                           previous_object                           |                           current_object
----------------------------------------------------------------------
- function master_drop_sequences(text[])                              |
- function task_tracker_assign_task(bigint,integer,text)              |
- function task_tracker_cleanup_job(bigint)                           |
- function task_tracker_conninfo_cache_invalidate()                   |
- function task_tracker_task_status(bigint,integer)                   |
- function worker_execute_sql_task(bigint,integer,text,boolean)       |
- function worker_merge_files_and_run_query(bigint,integer,text,text) |
+                           previous_object                           |                           current_object                           
+---------------------------------------------------------------------+--------------------------------------------------------------------
+ function master_drop_sequences(text[])                              | 
+ function task_tracker_assign_task(bigint,integer,text)              | 
+ function task_tracker_cleanup_job(bigint)                           | 
+ function task_tracker_conninfo_cache_invalidate()                   | 
+ function task_tracker_task_status(bigint,integer)                   | 
+ function worker_execute_sql_task(bigint,integer,text,boolean)       | 
+ function worker_merge_files_and_run_query(bigint,integer,text,text) | 
                                                                      | function create_citus_local_table(regclass)
                                                                      | function undistribute_table(regclass)
                                                                      | function worker_record_sequence_dependency(regclass,regclass,name)
@@ -469,33 +470,32 @@ ALTER EXTENSION citus UPDATE TO '10.0-1';
 ALTER EXTENSION citus UPDATE TO '9.5-1';
 -- Should be empty result since upgrade+downgrade should be a no-op
 SELECT * FROM print_extension_changes();
- previous_object | current_object
----------------------------------------------------------------------
+ previous_object | current_object 
+-----------------+----------------
 (0 rows)
 
 -- Snapshot of state at 10.0-1
 ALTER EXTENSION citus UPDATE TO '10.0-1';
 SELECT * FROM print_extension_changes();
- previous_object |                            current_object
----------------------------------------------------------------------
-                 | access method columnar
-                 | function alter_columnar_table_reset(regclass,boolean,boolean,boolean)
-                 | function alter_columnar_table_set(regclass,integer,integer,name)
+ previous_object |                    current_object                     
+-----------------+-------------------------------------------------------
+                 | function citus_database_size(name)
                  | function citus_internal.cstore_ensure_objects_exist()
-                 | function cstore.columnar_handler(internal)
+                 | function citus_node_database_size(text,integer,name)
                  | schema cstore
                  | sequence cstore.storageid_seq
                  | table cstore.cstore_skipnodes
                  | table cstore.cstore_stripes
                  | table cstore.options
+                 | view citus_nodes
                  | view citus_tables
-(11 rows)
+(10 rows)
 
 DROP TABLE prev_objects, extension_diff;
 -- show running version
 SHOW citus.version;
- citus.version
----------------------------------------------------------------------
+ citus.version 
+---------------
  10.0devel
 (1 row)
 
@@ -509,10 +509,11 @@ WHERE pgd.refclassid = 'pg_extension'::regclass AND
 	  pge.extname    = 'citus' AND
 	  pgio.schema    NOT IN ('pg_catalog', 'citus', 'citus_internal', 'test', 'cstore')
 ORDER BY 1, 2;
- type |      identity
----------------------------------------------------------------------
+ type |      identity       
+------+---------------------
+ view | public.citus_nodes
  view | public.citus_tables
-(1 row)
+(2 rows)
 
 -- see incompatible version errors out
 RESET citus.enable_version_checks;
@@ -533,8 +534,8 @@ CREATE TABLE version_mismatch_table(column1 int);
 INSERT INTO version_mismatch_table(column1) VALUES(5);
 -- Test SELECT
 SELECT * FROM version_mismatch_table ORDER BY column1;
- column1
----------------------------------------------------------------------
+ column1 
+---------
        0
        1
        2
@@ -549,10 +550,10 @@ SELECT d.datname as "Name",
        pg_catalog.array_to_string(d.datacl, E'\n') AS "Access privileges"
 FROM pg_catalog.pg_database d
 ORDER BY 1;
-    Name    |  Owner   |   Access privileges
----------------------------------------------------------------------
- postgres   | postgres |
- regression | postgres |
+    Name    |  Owner   |   Access privileges   
+------------+----------+-----------------------
+ postgres   | postgres | 
+ regression | postgres | 
  template0  | postgres | =c/postgres          +
             |          | postgres=CTc/postgres
  template1  | postgres | =c/postgres          +
@@ -597,10 +598,11 @@ ALTER EXTENSION citus UPDATE;
 -- if cache is invalidated succesfull, this \d should work without any problem
 \d
             List of relations
- Schema |     Name     | Type |  Owner
----------------------------------------------------------------------
+ Schema |     Name     | Type |  Owner   
+--------+--------------+------+----------
+ public | citus_nodes  | view | postgres
  public | citus_tables | view | postgres
-(1 row)
+(2 rows)
 
 \c - - - :master_port
 -- test https://github.com/citusdata/citus/issues/3409
@@ -620,8 +622,8 @@ DO $$begin
     end loop;
 end$$;
 SELECT datid, datname, usename FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- datid | datname | usename
----------------------------------------------------------------------
+ datid | datname | usename 
+-------+---------+---------
 (0 rows)
 
 CREATE EXTENSION Citus;
@@ -636,8 +638,8 @@ DO $$begin
     end loop;
 end$$;
 SELECT datid, datname, usename FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- datid |  datname   |  usename
----------------------------------------------------------------------
+ datid |  datname   |  usename  
+-------+------------+-----------
  16384 | regression | testuser2
 (1 row)
 
@@ -650,8 +652,8 @@ CREATE EXTENSION citus;
 SELECT datname, current_database(),
     usename, (SELECT extowner::regrole::text FROM pg_extension WHERE extname = 'citus')
 FROM test.maintenance_worker();
-  datname   | current_database | usename  | extowner
----------------------------------------------------------------------
+  datname   | current_database | usename  | extowner 
+------------+------------------+----------+----------
  regression | regression       | testuser | testuser
 (1 row)
 
@@ -672,8 +674,8 @@ CREATE SCHEMA test;
 SELECT datname, current_database(),
     usename, (SELECT extowner::regrole::text FROM pg_extension WHERE extname = 'citus')
 FROM test.maintenance_worker();
- datname | current_database | usename  | extowner
----------------------------------------------------------------------
+ datname | current_database | usename  | extowner 
+---------+------------------+----------+----------
  another | another          | postgres | postgres
 (1 row)
 
@@ -707,8 +709,8 @@ SELECT
     *
 FROM
     test_daemon.maintenance_daemon_died('another');
- maintenance_daemon_died
----------------------------------------------------------------------
+ maintenance_daemon_died 
+-------------------------
  t
 (1 row)
 
@@ -766,15 +768,15 @@ DROP DATABASE another;
 \c - - - :master_port
 -- only the regression database should have a maintenance daemon
 SELECT count(*) FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- count
----------------------------------------------------------------------
+ count 
+-------
      1
 (1 row)
 
 -- recreate the extension immediately after the maintenancae daemon errors
 SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- pg_cancel_backend
----------------------------------------------------------------------
+ pg_cancel_backend 
+-------------------
  t
 (1 row)
 
@@ -784,22 +786,22 @@ CREATE EXTENSION citus;
 SELECT datname, current_database(),
     usename, (SELECT extowner::regrole::text FROM pg_extension WHERE extname = 'citus')
 FROM test.maintenance_worker();
-  datname   | current_database | usename  | extowner
----------------------------------------------------------------------
+  datname   | current_database | usename  | extowner 
+------------+------------------+----------+----------
  regression | regression       | postgres | postgres
 (1 row)
 
 -- confirm that there is only one maintenance daemon
 SELECT count(*) FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- count
----------------------------------------------------------------------
+ count 
+-------
      1
 (1 row)
 
 -- kill the maintenance daemon
 SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- pg_cancel_backend
----------------------------------------------------------------------
+ pg_cancel_backend 
+-------------------
  t
 (1 row)
 
@@ -807,8 +809,8 @@ SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE application_name = 'Ci
 \c - - - :master_port
 -- run something that goes through planner hook and therefore kicks of maintenance daemon
 SELECT 1;
- ?column?
----------------------------------------------------------------------
+ ?column? 
+----------
         1
 (1 row)
 
@@ -816,15 +818,15 @@ SELECT 1;
 SELECT datname, current_database(),
     usename, (SELECT extowner::regrole::text FROM pg_extension WHERE extname = 'citus')
 FROM test.maintenance_worker();
-  datname   | current_database | usename  | extowner
----------------------------------------------------------------------
+  datname   | current_database | usename  | extowner 
+------------+------------------+----------+----------
  regression | regression       | postgres | postgres
 (1 row)
 
 -- confirm that there is only one maintenance daemon
 SELECT count(*) FROM pg_stat_activity WHERE application_name = 'Citus Maintenance Daemon';
- count
----------------------------------------------------------------------
+ count 
+-------
      1
 (1 row)
 
