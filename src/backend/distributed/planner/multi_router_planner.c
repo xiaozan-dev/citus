@@ -165,7 +165,8 @@ static Value * MakeDummyColumnString(int dummyColumnId);
 static List * BuildRoutesForInsert(Query *query, DeferredErrorMessage **planningError);
 static List * GroupInsertValuesByShardId(List *insertValuesList);
 static List * ExtractInsertValuesList(Query *query, Var *partitionColumn);
-static DeferredErrorMessage * MultiRouterPlannableQuery(Query *query);
+static DeferredErrorMessage * DeferErrorIfUnsupportedRouterPlannableSelectQuery(
+	Query *query);
 static DeferredErrorMessage * ErrorIfQueryHasUnroutableModifyingCTE(Query *queryTree);
 static bool SelectsFromDistributedTable(List *rangeTableList, Query *query);
 static ShardPlacement * CreateDummyPlacement(bool hasLocalRelation);
@@ -193,7 +194,8 @@ CreateRouterPlan(Query *originalQuery, Query *query,
 {
 	DistributedPlan *distributedPlan = CitusMakeNode(DistributedPlan);
 
-	distributedPlan->planningError = MultiRouterPlannableQuery(query);
+	distributedPlan->planningError = DeferErrorIfUnsupportedRouterPlannableSelectQuery(
+		query);
 
 	if (distributedPlan->planningError == NULL)
 	{
@@ -605,7 +607,8 @@ ModifyPartialQuerySupported(Query *queryTree, bool multiShardQuery,
 
 			if (cteQuery->commandType == CMD_SELECT)
 			{
-				DeferredErrorMessage *cteError = MultiRouterPlannableQuery(cteQuery);
+				DeferredErrorMessage *cteError =
+					DeferErrorIfUnsupportedRouterPlannableSelectQuery(cteQuery);
 				if (cteError)
 				{
 					return cteError;
@@ -2153,8 +2156,6 @@ PlanRouterQuery(Query *originalQuery,
 				bool replacePrunedQueryWithDummy, bool *multiShardModifyQuery,
 				Const **partitionValueConst)
 {
-	RelationRestrictionContext *relationRestrictionContext =
-		plannerRestrictionContext->relationRestrictionContext;
 	bool isMultiShardQuery = false;
 	DeferredErrorMessage *planningError = NULL;
 	bool shardsPresent = false;
@@ -2267,13 +2268,15 @@ PlanRouterQuery(Query *originalQuery,
 	/* we need anchor shard id for select queries with router planner */
 	uint64 shardId = GetAnchorShardId(*prunedShardIntervalListList);
 
-	bool hasLocalRelation = relationRestrictionContext->hasLocalRelation;
-
+	/* both Postgres tables and materialized tables are locally avaliable */
+	RTEListProperties *rteProperties = GetRTEListPropertiesForQuery(originalQuery);
+	bool hasPostgresLocalRelation =
+		rteProperties->hasPostgresLocalTable || rteProperties->hasMaterializedView;
 	List *taskPlacementList =
 		CreateTaskPlacementListForShardIntervals(*prunedShardIntervalListList,
 												 shardsPresent,
 												 replacePrunedQueryWithDummy,
-												 hasLocalRelation);
+												 hasPostgresLocalRelation);
 	if (taskPlacementList == NIL)
 	{
 		planningError = DeferredError(ERRCODE_FEATURE_NOT_SUPPORTED,
@@ -2651,8 +2654,6 @@ TargetShardIntervalsForRestrictInfo(RelationRestrictionContext *restrictionConte
 		List *joinInfoList = relationRestriction->relOptInfo->joininfo;
 		List *pseudoRestrictionList = extract_actual_clauses(joinInfoList, true);
 
-		relationRestriction->prunedShardIntervalList = NIL;
-
 		/*
 		 * Queries may have contradiction clauses like 'false', or '1=0' in
 		 * their filters. Such queries would have pseudo constant 'false'
@@ -2682,7 +2683,6 @@ TargetShardIntervalsForRestrictInfo(RelationRestrictionContext *restrictionConte
 			}
 		}
 
-		relationRestriction->prunedShardIntervalList = prunedShardIntervalList;
 		prunedShardIntervalListList = lappend(prunedShardIntervalListList,
 											  prunedShardIntervalList);
 	}
@@ -3433,20 +3433,25 @@ ExtractInsertPartitionKeyValue(Query *query)
 
 
 /*
- * MultiRouterPlannableQuery checks if given select query is router plannable,
- * setting distributedPlan->planningError if not.
+ * DeferErrorIfUnsupportedRouterPlannableSelectQuery checks if given query is router plannable,
+ * SELECT query, setting distributedPlan->planningError if not.
  * The query is router plannable if it is a modify query, or if it is a select
  * query issued on a hash partitioned distributed table. Router plannable checks
  * for select queries can be turned off by setting citus.enable_router_execution
  * flag to false.
  */
 static DeferredErrorMessage *
-MultiRouterPlannableQuery(Query *query)
+DeferErrorIfUnsupportedRouterPlannableSelectQuery(Query *query)
 {
 	List *rangeTableRelationList = NIL;
 	ListCell *rangeTableRelationCell = NULL;
 
-	Assert(query->commandType == CMD_SELECT);
+	if (query->commandType != CMD_SELECT)
+	{
+		return DeferredError(ERRCODE_ASSERT_FAILURE,
+							 "Only SELECT query types are supported in this path",
+							 NULL, NULL);
+	}
 
 	if (!EnableRouterExecution)
 	{
@@ -3554,8 +3559,6 @@ CopyRelationRestrictionContext(RelationRestrictionContext *oldContext)
 		(RelationRestrictionContext *) palloc(sizeof(RelationRestrictionContext));
 	ListCell *relationRestrictionCell = NULL;
 
-	newContext->hasDistributedRelation = oldContext->hasDistributedRelation;
-	newContext->hasLocalRelation = oldContext->hasLocalRelation;
 	newContext->allReferenceTables = oldContext->allReferenceTables;
 	newContext->relationRestrictionList = NIL;
 
@@ -3583,7 +3586,6 @@ CopyRelationRestrictionContext(RelationRestrictionContext *oldContext)
 
 		/* not copyable, but readonly */
 		newRestriction->plannerInfo = oldRestriction->plannerInfo;
-		newRestriction->prunedShardIntervalList = oldRestriction->prunedShardIntervalList;
 
 		newContext->relationRestrictionList =
 			lappend(newContext->relationRestrictionList, newRestriction);

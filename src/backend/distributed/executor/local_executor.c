@@ -80,6 +80,7 @@
 
 #include "distributed/pg_version_constants.h"
 
+#include "distributed/adaptive_executor.h"
 #include "distributed/commands/utility_hook.h"
 #include "distributed/citus_custom_scan.h"
 #include "distributed/citus_ruleutils.h"
@@ -566,6 +567,10 @@ ExecuteLocalTaskPlan(PlannedStmt *taskPlan, char *queryString,
 	/*
 	 * Use the tupleStore provided by the scanState because it is shared accross
 	 * the other task executions and the adaptive executor.
+	 *
+	 * Also note that as long as the tupleDest is provided, local execution always
+	 * stores the tuples. This is also valid for partiallyLocalOrRemote tasks
+	 * as well.
 	 */
 	DestReceiver *destReceiver = tupleDest ?
 								 CreateTupleDestDestReceiver(tupleDest, task,
@@ -760,11 +765,14 @@ ShouldExecuteTasksLocally(List *taskList)
 	{
 		/*
 		 * For multi-task executions, we prefer to use connections for parallelism,
-		 * except when in a multi-statement transaction since there could be other
-		 * commands that require local execution.
+		 * except for two cases. First, when in a multi-statement transaction since
+		 * there could be other commands that require local execution. Second, the
+		 * task list already requires sequential execution. In that case, connection
+		 * establishment becomes an unnecessary operation.
 		 */
 
-		return IsMultiStatementTransaction() && AnyTaskAccessesLocalNode(taskList);
+		return (IsMultiStatementTransaction() || ShouldRunTasksSequentially(taskList)) &&
+			   AnyTaskAccessesLocalNode(taskList);
 	}
 
 	return false;
