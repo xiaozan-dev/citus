@@ -121,10 +121,10 @@ RelayEventExtendNames(Node *parseTree, char *schemaName, uint64 shardId)
 				{
 					Constraint *constraint = (Constraint *) command->def;
 					char **constraintName = &(constraint->conname);
-					const bool rvMissingOk = false;
+					const bool missingOk = false;
 					relationId = RangeVarGetRelid(alterTableStmt->relation,
 												  AccessShareLock,
-												  rvMissingOk);
+												  missingOk);
 
 					if (constraint->contype == CONSTR_PRIMARY && constraint->indexname)
 					{
