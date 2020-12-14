@@ -1181,7 +1181,7 @@ SELECT create_distributed_table('part_table', 'seq');
 CREATE TABLE part_table_p202008 PARTITION OF part_table FOR VALUES FROM ('2020-08-01 00:00:00') TO ('2020-09-01 00:00:00');
 
 --4. add a check constraint
-alter table part_table add CONSTRAINT my_seq CHECK (my_seq > 0);
+ALTER TABLE part_table ADD CONSTRAINT my_seq CHECK (my_seq > 0);
 
 --5. add a partition
 CREATE TABLE part_table_p202009 PARTITION OF part_table FOR VALUES FROM ('2020-09-01 00:00:00') TO ('2020-10-01 00:00:00');
