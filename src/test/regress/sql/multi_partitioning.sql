@@ -1199,6 +1199,9 @@ CREATE TABLE part_table_p202009 PARTITION OF part_table FOR VALUES FROM ('2020-0
 \c - - - :master_port
 SET search_path = partitioning_schema;
 
+-- verify that we can drop the constraints on partitioned tables
+ALTER TABLE part_table DROP CONSTRAINT my_seq;
+
 DROP TABLE part_table, "schema-test";
 DROP SCHEMA partitioning_schema CASCADE;
 RESET SEARCH_PATH;
