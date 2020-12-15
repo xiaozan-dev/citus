@@ -882,13 +882,6 @@ CreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamLi
 	bool hasCtes = originalQuery->cteList != NIL;
 	if (list_length(subPlanList) > 0 || hasCtes)
 	{
-		StringInfo subPlanString = makeStringInfo();
-			pg_get_query_def(originalQuery, subPlanString);
-			ereport(DEBUG1, (errmsg(
-								 "Top query: %s",
-								 ApplyLogRedaction(subPlanString->data))));
-
-
 		Query *newQuery = copyObject(originalQuery);
 		bool setPartitionedTablesInherited = false;
 		PlannerRestrictionContext *currentPlannerRestrictionContext =
