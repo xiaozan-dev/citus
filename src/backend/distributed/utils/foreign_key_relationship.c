@@ -26,6 +26,8 @@
 #include "distributed/foreign_key_relationship.h"
 #include "distributed/hash_helpers.h"
 #include "distributed/listutils.h"
+#include "distributed/log_utils.h"
+#include "distributed/reference_table_utils.h"
 #include "distributed/version_compat.h"
 #include "nodes/pg_list.h"
 #include "storage/lockdefs.h"
@@ -88,7 +90,118 @@ static ForeignConstraintRelationshipNode * CreateOrFindNode(HTAB *adjacencyLists
 static void GetConnectedListHelper(ForeignConstraintRelationshipNode *node,
 								   List **adjacentNodeList, bool
 								   isReferencing);
+static List * GetNeighbourList(ForeignConstraintRelationshipNode *node, bool isReferencing);
+static ForeignConstraintRelationshipNode * GetRelationNode(Oid relationId, bool *isFound);
 static List * GetForeignConstraintRelationshipHelper(Oid relationId, bool isReferencing);
+static void SetRelationNodeListNotVisited(List *relationNodeList);
+
+
+static List * GetFkeyConnectedRelations(Oid relationId);
+static List * GetAllNeighboursList(ForeignConstraintRelationshipNode *node);
+
+
+PG_FUNCTION_INFO_V1(debug1_print_fkey_connected_relations);
+
+/*
+ * returns relations that relationId references or is referenced by
+ */
+Datum
+debug1_print_fkey_connected_relations(PG_FUNCTION_ARGS)
+{
+	if (!IsLoggableLevel(DEBUG1))
+	{
+		ereport(ERROR, (errmsg("change log level (at least) to DEBUG1")));
+	}
+
+	Oid relationId = PG_GETARG_OID(0);
+	List *relationIdList = GetFkeyConnectedRelations(relationId);
+
+	/* sort them first */
+	relationIdList = SortList(relationIdList, CompareOids);
+
+	ereport(DEBUG1, (errmsg("--- FKey connected relations for %s (%d) ---",
+							generate_qualified_relation_name(relationId),
+							relationId)));
+
+	Oid oid;
+	foreach_oid(oid, relationIdList)
+	{
+		ereport(DEBUG1, (errmsg("\t%s (%d)",
+								generate_qualified_relation_name(oid),
+								oid)));
+	}
+
+	ereport(DEBUG1, (errmsg("--- end of list ---")));
+
+	PG_RETURN_VOID();
+}
+
+
+static List *
+GetFkeyConnectedRelations(Oid relationId)
+{
+	Relation relation = try_relation_open(relationId, AccessExclusiveLock);
+	if (!RelationIsValid(relation))
+	{
+		ereport(ERROR, (errmsg("invalid rel")));
+	}
+
+	relation_close(relation, NoLock);
+
+	bool isFound = false;
+	ForeignConstraintRelationshipNode *relationNode = GetRelationNode(relationId, &isFound);
+	if (!isFound)
+	{
+		return NIL;
+	}
+
+	relationNode->visited = true;
+	List *fkeyConnectedRelations = list_make1(relationNode);
+
+	ForeignConstraintRelationshipNode *currentNode = NULL;
+	foreach_ptr_append(currentNode, fkeyConnectedRelations)
+	{
+		List *allNeighboursList = GetAllNeighboursList(currentNode);
+		ForeignConstraintRelationshipNode *neighborNode = NULL;
+		foreach_ptr(neighborNode, allNeighboursList)
+		{
+			if (neighborNode->visited)
+			{
+				continue;
+			}
+
+			neighborNode->visited = true;
+			fkeyConnectedRelations = lappend(fkeyConnectedRelations, neighborNode);
+		}
+	}
+
+	/* extract oid's & revert flags */
+
+	List *allRelations = NIL;
+
+	ForeignConstraintRelationshipNode *iterNode = NULL;
+	foreach_ptr(iterNode, fkeyConnectedRelations)
+	{
+		allRelations = lappend_oid(allRelations, iterNode->relationId);
+	}
+
+	SetRelationNodeListNotVisited(fkeyConnectedRelations);
+
+	return allRelations;
+}
+
+
+static List *
+GetAllNeighboursList(ForeignConstraintRelationshipNode *node)
+{
+	List *referencedNeighboursIdList = GetNeighbourList(node, false);
+	List *referencingNeighboursIdList = GetNeighbourList(node, true);
+
+	List* allNeighboursList = list_concat_unique_ptr(referencedNeighboursIdList,
+													 referencingNeighboursIdList);
+	return allNeighboursList;
+}
+
 
 
 /*
@@ -108,7 +221,7 @@ ReferencedRelationIdList(Oid relationId)
 
 /*
  * ReferencingRelationIdList is a wrapper function around GetForeignConstraintRelationshipHelper
- * to get list of relation IDs which are referencing by the given relation id.
+ * to get list of relation IDs which are referencing to given relation id.
  *
  * Note that, if relation A is referenced by relation B and relation B is referenced
  * by relation C, then the result list for relation C consists of the relation
@@ -133,12 +246,8 @@ GetForeignConstraintRelationshipHelper(Oid relationId, bool isReferencing)
 	List *foreignNodeList = NIL;
 	bool isFound = false;
 
-	CreateForeignConstraintRelationshipGraph();
-
 	ForeignConstraintRelationshipNode *relationNode =
-		(ForeignConstraintRelationshipNode *) hash_search(
-			fConstraintRelationshipGraph->nodeMap, &relationId,
-			HASH_FIND, &isFound);
+		GetRelationNode(relationId, &isFound);
 
 	if (!isFound)
 	{
@@ -151,22 +260,44 @@ GetForeignConstraintRelationshipHelper(Oid relationId, bool isReferencing)
 
 	GetConnectedListHelper(relationNode, &foreignNodeList, isReferencing);
 
-	/*
-	 * We need only their OIDs, we get back node list to make their visited
-	 * variable to false for using them iteratively.
-	 */
 	ForeignConstraintRelationshipNode *currentNode = NULL;
 	foreach_ptr(currentNode, foreignNodeList)
 	{
 		foreignConstraintList = lappend_oid(foreignConstraintList,
 											currentNode->relationId);
-		currentNode->visited = false;
 	}
+
+	SetRelationNodeListNotVisited(foreignNodeList);
 
 	/* set to false separately, since we don't add itself to foreign node list */
 	relationNode->visited = false;
 
 	return foreignConstraintList;
+}
+
+
+static void
+SetRelationNodeListNotVisited(List *relationNodeList)
+{
+	ForeignConstraintRelationshipNode *relationNode = NULL;
+	foreach_ptr(relationNode, relationNodeList)
+	{
+		relationNode->visited = false;
+	}
+}
+
+
+static ForeignConstraintRelationshipNode *
+GetRelationNode(Oid relationId, bool *isFound)
+{
+	CreateForeignConstraintRelationshipGraph();
+
+	ForeignConstraintRelationshipNode *relationNode =
+		(ForeignConstraintRelationshipNode *) hash_search(
+			fConstraintRelationshipGraph->nodeMap, &relationId,
+			HASH_FIND, isFound);
+
+	return relationNode;
 }
 
 
@@ -263,14 +394,7 @@ GetConnectedListHelper(ForeignConstraintRelationshipNode *node, List **adjacentN
 
 	node->visited = true;
 
-	if (isReferencing)
-	{
-		neighbourList = node->backAdjacencyList;
-	}
-	else
-	{
-		neighbourList = node->adjacencyList;
-	}
+	neighbourList = GetNeighbourList(node, isReferencing);
 
 	ForeignConstraintRelationshipNode *neighborNode = NULL;
 	foreach_ptr(neighborNode, neighbourList)
@@ -280,6 +404,20 @@ GetConnectedListHelper(ForeignConstraintRelationshipNode *node, List **adjacentN
 			*adjacentNodeList = lappend(*adjacentNodeList, neighborNode);
 			GetConnectedListHelper(neighborNode, adjacentNodeList, isReferencing);
 		}
+	}
+}
+
+
+static List *
+GetNeighbourList(ForeignConstraintRelationshipNode *node, bool isReferencing)
+{
+	if (isReferencing)
+	{
+		return list_copy(node->backAdjacencyList);
+	}
+	else
+	{
+		return list_copy(node->adjacencyList);
 	}
 }
 
