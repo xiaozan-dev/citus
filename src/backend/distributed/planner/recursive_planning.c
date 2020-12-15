@@ -1727,6 +1727,7 @@ TransformFunctionRTE(RangeTblEntry *rangeTblEntry)
 			subquery->targetList = lappend(subquery->targetList, targetEntry);
 		}
 	}
+
 	/*
 	 * If tupleDesc is NULL we have 2 different cases:
 	 *
@@ -1776,6 +1777,7 @@ TransformFunctionRTE(RangeTblEntry *rangeTblEntry)
 				columnType = list_nth_oid(rangeTblFunction->funccoltypes,
 										  targetColumnIndex);
 			}
+
 			/* use the types in the function definition otherwise */
 			else
 			{

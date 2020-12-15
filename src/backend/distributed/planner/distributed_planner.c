@@ -613,10 +613,10 @@ CreateDistributedPlannedStmt(DistributedPlanningContext *planContext)
 	}
 
 	DistributedPlan *distributedPlan =
-			TryCreateDistributedPlan(planId, planContext->originalQuery, planContext->query,
-							  planContext->boundParams,
-							  hasUnresolvedParams,
-							  planContext->plannerRestrictionContext);
+		TryCreateDistributedPlan(planId, planContext->originalQuery, planContext->query,
+								 planContext->boundParams,
+								 hasUnresolvedParams,
+								 planContext->plannerRestrictionContext);
 
 	/*
 	 * If no plan was generated, prepare a generic error to be emitted.
@@ -682,19 +682,37 @@ CreateDistributedPlannedStmt(DistributedPlanningContext *planContext)
 
 DistributedPlan *
 TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamListInfo
-		  boundParams, bool hasUnresolvedParams,
-		  PlannerRestrictionContext *plannerRestrictionContext)
+						 boundParams, bool hasUnresolvedParams,
+						 PlannerRestrictionContext *plannerRestrictionContext)
 {
 	DistributedPlan *d = NULL;
 	Query *inlinedQuery = copyObject(originalQuery);
+	Query *copyC = copyObject(query);
+
+
+	PlannerRestrictionContext *plannerRestrictionContextC = palloc0(
+		sizeof(PlannerRestrictionContext));
+	plannerRestrictionContextC->relationRestrictionContext =
+		FilterRelationRestrictionContext(
+			plannerRestrictionContext->relationRestrictionContext, QueryRteIdentities(
+				query));
+	plannerRestrictionContextC->memoryContext = plannerRestrictionContext->memoryContext;
+	plannerRestrictionContextC->fastPathRestrictionContext =
+		plannerRestrictionContext->fastPathRestrictionContext;
+	plannerRestrictionContextC->joinRestrictionContext =
+		plannerRestrictionContext->joinRestrictionContext;
+
 	RecursivelyInlineCtesInQueryTree(inlinedQuery);
+
+
 	MemoryContext savedContext = CurrentMemoryContext;
+
 
 	PG_TRY();
 	{
 		d = CreateDistributedPlan(planId, inlinedQuery, query,
-				  boundParams,  hasUnresolvedParams,
-				  plannerRestrictionContext);
+								  boundParams, hasUnresolvedParams,
+								  plannerRestrictionContext);
 	}
 	PG_CATCH();
 	{
@@ -718,6 +736,7 @@ TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, Para
 		/* leave the error handling system */
 		FreeErrorData(edata);
 
+
 		d = NULL;
 	}
 	PG_END_TRY();
@@ -728,11 +747,11 @@ TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, Para
 	}
 
 
-	return CreateDistributedPlan(planId, originalQuery, query,
-					  boundParams,  hasUnresolvedParams,
-					  plannerRestrictionContext);
-
+	return CreateDistributedPlan(planId, originalQuery, copyC,
+								 boundParams, hasUnresolvedParams,
+								 plannerRestrictionContextC);
 }
+
 
 /*
  * CreateDistributedPlan generates a distributed plan for a query.
@@ -911,8 +930,9 @@ CreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamLi
 		*query = *newQuery;
 
 		/* recurse into CreateDistributedPlan with subqueries/CTEs replaced */
-		distributedPlan = TryCreateDistributedPlan(planId, originalQuery, query, NULL, false,
-												plannerRestrictionContext);
+		distributedPlan = TryCreateDistributedPlan(planId, originalQuery, query, NULL,
+												   false,
+												   plannerRestrictionContext);
 
 		/* distributedPlan cannot be null since hasUnresolvedParams argument was false */
 		Assert(distributedPlan != NULL);

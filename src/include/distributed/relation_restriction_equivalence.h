@@ -16,6 +16,7 @@
 #include "distributed/metadata_cache.h"
 
 #define SINGLE_RTE_INDEX 1
+extern Relids QueryRteIdentities(Query *queryTree);
 
 extern bool AllDistributionKeysInQueryAreEqual(Query *originalQuery,
 											   PlannerRestrictionContext *

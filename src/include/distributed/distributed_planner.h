@@ -254,9 +254,12 @@ extern struct DistributedPlan * CreateDistributedPlan(uint64 planId, Query *orig
 													  plannerRestrictionContext);
 
 
-extern struct DistributedPlan *
-TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamListInfo
-		  boundParams, bool hasUnresolvedParams,
-		  PlannerRestrictionContext *plannerRestrictionContext);
+extern struct DistributedPlan * TryCreateDistributedPlan(uint64 planId,
+														 Query *originalQuery,
+														 Query *query, ParamListInfo
+														 boundParams, bool
+														 hasUnresolvedParams,
+														 PlannerRestrictionContext *
+														 plannerRestrictionContext);
 
 #endif /* DISTRIBUTED_PLANNER_H */
