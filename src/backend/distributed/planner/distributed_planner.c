@@ -693,9 +693,8 @@ TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, Para
 	PlannerRestrictionContext *plannerRestrictionContextC = palloc0(
 		sizeof(PlannerRestrictionContext));
 	plannerRestrictionContextC->relationRestrictionContext =
-		FilterRelationRestrictionContext(
-			plannerRestrictionContext->relationRestrictionContext, QueryRteIdentities(
-				query));
+			CopyRelationRestrictionContext(
+			plannerRestrictionContext->relationRestrictionContext);
 	plannerRestrictionContextC->memoryContext = plannerRestrictionContext->memoryContext;
 	plannerRestrictionContextC->fastPathRestrictionContext =
 		plannerRestrictionContext->fastPathRestrictionContext;

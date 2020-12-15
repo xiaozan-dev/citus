@@ -56,4 +56,6 @@ extern RelationRestrictionContext * FilterRelationRestrictionContext(
 	RelationRestrictionContext *relationRestrictionContext,
 	Relids
 	queryRteIdentities);
+extern RelationRestrictionContext *
+CopyRelationRestrictionContext(RelationRestrictionContext *relationRestrictionContext);
 #endif /* RELATION_RESTRICTION_EQUIVALENCE_H */
