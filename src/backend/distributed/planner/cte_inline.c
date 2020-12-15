@@ -80,6 +80,11 @@ bool EnableCTEInlining = true;
 void
 RecursivelyInlineCtesInQueryTree(Query *query)
 {
+	if (!EnableCTEInlining)
+	{
+		return;
+	}
+
 	InlineCTEsInQueryTree(query);
 
 	query_tree_walker(query, RecursivelyInlineCteWalker, NULL, 0);

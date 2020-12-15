@@ -57,6 +57,7 @@
 #include "distributed/citus_nodes.h"
 #include "distributed/citus_ruleutils.h"
 #include "distributed/commands/multi_copy.h"
+#include "distributed/cte_inline.h"
 #include "distributed/distributed_planner.h"
 #include "distributed/errormessage.h"
 #include "distributed/local_distributed_join_planner.h"
@@ -138,7 +139,7 @@ typedef struct VarLevelsUpWalkerContext
 
 
 /* local function forward declarations */
-static DeferredErrorMessage * RecursivelyPlanSubqueriesAndCTEs(Query *query,
+static DeferredErrorMessage * RecursivelyPlanSubqueriesAndCTEs(Query **query,
 															   RecursivePlanningContext *
 															   context);
 static bool ShouldRecursivelyPlanNonColocatedSubqueries(Query *subquery,
@@ -205,7 +206,7 @@ static char * GetRelationNameAndAliasName(RangeTblEntry *rangeTablentry);
  * Note that the input originalQuery query is modified if any subplans are generated.
  */
 List *
-GenerateSubplansForSubqueriesAndCTEs(uint64 planId, Query *originalQuery,
+GenerateSubplansForSubqueriesAndCTEs(uint64 planId, Query **originalQuery,
 									 PlannerRestrictionContext *plannerRestrictionContext)
 {
 	RecursivePlanningContext context;
@@ -234,7 +235,7 @@ GenerateSubplansForSubqueriesAndCTEs(uint64 planId, Query *originalQuery,
 	 * each each subquery and subquery joins among subqueries.
 	 */
 	context.allDistributionKeysInQueryAreEqual =
-		AllDistributionKeysInQueryAreEqual(originalQuery, plannerRestrictionContext);
+		AllDistributionKeysInQueryAreEqual(*originalQuery, plannerRestrictionContext);
 
 	DeferredErrorMessage *error = RecursivelyPlanSubqueriesAndCTEs(originalQuery,
 																   &context);
@@ -247,7 +248,7 @@ GenerateSubplansForSubqueriesAndCTEs(uint64 planId, Query *originalQuery,
 	if (context.subPlanList && IsLoggableLevel(DEBUG1))
 	{
 		StringInfo subPlanString = makeStringInfo();
-		pg_get_query_def(originalQuery, subPlanString);
+		pg_get_query_def(*originalQuery, subPlanString);
 		ereport(DEBUG1, (errmsg(
 							 "Plan " UINT64_FORMAT
 							 " query after replacing subqueries and CTEs: %s", planId,
@@ -275,9 +276,24 @@ GenerateSubplansForSubqueriesAndCTEs(uint64 planId, Query *originalQuery,
  * subplans will be added to subPlanList.
  */
 static DeferredErrorMessage *
-RecursivelyPlanSubqueriesAndCTEs(Query *query, RecursivePlanningContext *context)
+RecursivelyPlanSubqueriesAndCTEs(Query **query, RecursivePlanningContext *context)
 {
-	DeferredErrorMessage *error = RecursivelyPlanCTEs(query, context);
+	if (context->allDistributionKeysInQueryAreEqual)
+	{
+		RecursivelyInlineCtesInQueryTree(*query);
+	}
+	else
+	{
+		Query *inlinedQuery = copyObject(*query);
+		RecursivelyInlineCtesInQueryTree(inlinedQuery);
+		if (AllDistributionKeysInSubqueryAreEqual(inlinedQuery,
+												  context->plannerRestrictionContext))
+		{
+			*query = copyObject(inlinedQuery);
+		}
+	}
+
+	DeferredErrorMessage *error = RecursivelyPlanCTEs(*query, context);
 	if (error != NULL)
 	{
 		return error;
@@ -299,10 +315,10 @@ RecursivelyPlanSubqueriesAndCTEs(Query *query, RecursivePlanningContext *context
 	}
 
 	/* make sure function calls in joins are executed in the coordinator */
-	WrapFunctionsInSubqueries(query);
+	WrapFunctionsInSubqueries(*query);
 
 	/* descend into subqueries */
-	query_tree_walker(query, RecursivelyPlanSubqueryWalker, context, 0);
+	query_tree_walker(*query, RecursivelyPlanSubqueryWalker, context, 0);
 
 	/*
 	 * At this point, all CTEs, leaf subqueries containing local tables and
@@ -314,9 +330,9 @@ RecursivelyPlanSubqueriesAndCTEs(Query *query, RecursivePlanningContext *context
 	 * top-level set operations.
 	 */
 
-	if (ShouldRecursivelyPlanSetOperation(query, context))
+	if (ShouldRecursivelyPlanSetOperation(*query, context))
 	{
-		RecursivelyPlanSetOperations(query, (Node *) query->setOperations, context);
+		RecursivelyPlanSetOperations(*query, (Node *) (*query)->setOperations, context);
 	}
 
 	/*
@@ -324,42 +340,42 @@ RecursivelyPlanSubqueriesAndCTEs(Query *query, RecursivePlanningContext *context
 	 * then we cannot have any distributed tables appearing in subqueries in
 	 * the WHERE clause.
 	 */
-	if (ShouldRecursivelyPlanAllSubqueriesInWhere(query))
+	if (ShouldRecursivelyPlanAllSubqueriesInWhere(*query))
 	{
 		/* replace all subqueries in the WHERE clause */
-		RecursivelyPlanAllSubqueries((Node *) query->jointree->quals, context);
+		RecursivelyPlanAllSubqueries((Node *) (*query)->jointree->quals, context);
 	}
 
-	if (query->havingQual != NULL)
+	if ((*query)->havingQual != NULL)
 	{
-		if (NodeContainsSubqueryReferencingOuterQuery(query->havingQual))
+		if (NodeContainsSubqueryReferencingOuterQuery((*query)->havingQual))
 		{
 			return DeferredError(ERRCODE_FEATURE_NOT_SUPPORTED,
 								 "Subqueries in HAVING cannot refer to outer query",
 								 NULL, NULL);
 		}
 
-		RecursivelyPlanAllSubqueries(query->havingQual, context);
+		RecursivelyPlanAllSubqueries((*query)->havingQual, context);
 	}
 
 	/*
 	 * If the query doesn't have distribution key equality,
 	 * recursively plan some of its subqueries.
 	 */
-	if (ShouldRecursivelyPlanNonColocatedSubqueries(query, context))
+	if (ShouldRecursivelyPlanNonColocatedSubqueries(*query, context))
 	{
-		RecursivelyPlanNonColocatedSubqueries(query, context);
+		RecursivelyPlanNonColocatedSubqueries(*query, context);
 	}
 
 
-	if (ShouldConvertLocalTableJoinsToSubqueries(query->rtable))
+	if (ShouldConvertLocalTableJoinsToSubqueries((*query)->rtable))
 	{
 		/*
 		 * Logical planner cannot handle "local_table" [OUTER] JOIN "dist_table", or
 		 * a query with local table/citus local table and subquery. We convert local/citus local
 		 * tables to a subquery until they can be planned.
 		 */
-		RecursivelyPlanLocalTableJoins(query, context);
+		RecursivelyPlanLocalTableJoins(*query, context);
 	}
 
 
@@ -741,6 +757,7 @@ RecursivelyPlanCTEs(Query *query, RecursivePlanningContext *planningContext)
 							 NULL, NULL);
 	}
 
+
 	/* get all RTE_CTEs that point to CTEs from cteList */
 	CteReferenceListWalker((Node *) query, &context);
 
@@ -882,7 +899,7 @@ RecursivelyPlanSubqueryWalker(Node *node, RecursivePlanningContext *context)
 		 * First, make sure any subqueries and CTEs within this subquery
 		 * are recursively planned if necessary.
 		 */
-		DeferredErrorMessage *error = RecursivelyPlanSubqueriesAndCTEs(query, context);
+		DeferredErrorMessage *error = RecursivelyPlanSubqueriesAndCTEs(&query, context);
 		if (error != NULL)
 		{
 			RaiseDeferredError(error, ERROR);
@@ -971,7 +988,7 @@ AllDistributionKeysInSubqueryAreEqual(Query *subquery,
 	/* we don't support distribution eq. checks for CTEs yet */
 	if (subquery->cteList != NIL)
 	{
-		return false;
+		/*return false; */
 	}
 
 	PlannerRestrictionContext *filteredRestrictionContext =
@@ -1725,7 +1742,6 @@ TransformFunctionRTE(RangeTblEntry *rangeTblEntry)
 			subquery->targetList = lappend(subquery->targetList, targetEntry);
 		}
 	}
-
 	/*
 	 * If tupleDesc is NULL we have 2 different cases:
 	 *
@@ -1775,7 +1791,6 @@ TransformFunctionRTE(RangeTblEntry *rangeTblEntry)
 				columnType = list_nth_oid(rangeTblFunction->funccoltypes,
 										  targetColumnIndex);
 			}
-
 			/* use the types in the function definition otherwise */
 			else
 			{
