@@ -613,7 +613,7 @@ CreateDistributedPlannedStmt(DistributedPlanningContext *planContext)
 	}
 
 	DistributedPlan *distributedPlan =
-		CreateDistributedPlan(planId, planContext->originalQuery, planContext->query,
+			TryCreateDistributedPlan(planId, planContext->originalQuery, planContext->query,
 							  planContext->boundParams,
 							  hasUnresolvedParams,
 							  planContext->plannerRestrictionContext);
@@ -679,6 +679,60 @@ CreateDistributedPlannedStmt(DistributedPlanningContext *planContext)
 	return resultPlan;
 }
 
+
+DistributedPlan *
+TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamListInfo
+		  boundParams, bool hasUnresolvedParams,
+		  PlannerRestrictionContext *plannerRestrictionContext)
+{
+	DistributedPlan *d = NULL;
+	Query *inlinedQuery = copyObject(originalQuery);
+	RecursivelyInlineCtesInQueryTree(inlinedQuery);
+	MemoryContext savedContext = CurrentMemoryContext;
+
+	PG_TRY();
+	{
+		d = CreateDistributedPlan(planId, inlinedQuery, query,
+				  boundParams,  hasUnresolvedParams,
+				  plannerRestrictionContext);
+	}
+	PG_CATCH();
+	{
+		MemoryContextSwitchTo(savedContext);
+		ErrorData *edata = CopyErrorData();
+		FlushErrorState();
+
+		/* don't try to intercept PANIC or FATAL, let those breeze past us */
+		if (edata->elevel != ERROR)
+		{
+			PG_RE_THROW();
+		}
+
+		ereport(DEBUG4, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+						 errmsg("Planning after CTEs inlined failed with "
+								"\nmessage: %s\ndetail: %s\nhint: %s",
+								edata->message ? edata->message : "",
+								edata->detail ? edata->detail : "",
+								edata->hint ? edata->hint : "")));
+
+		/* leave the error handling system */
+		FreeErrorData(edata);
+
+		d = NULL;
+	}
+	PG_END_TRY();
+
+	if (d != NULL)
+	{
+		return d;
+	}
+
+
+	return CreateDistributedPlan(planId, originalQuery, query,
+					  boundParams,  hasUnresolvedParams,
+					  plannerRestrictionContext);
+
+}
 
 /*
  * CreateDistributedPlan generates a distributed plan for a query.
@@ -809,7 +863,7 @@ CreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamLi
 	 * Plan subqueries and CTEs that cannot be pushed down by recursively
 	 * calling the planner and return the resulting plans to subPlanList.
 	 */
-	List *subPlanList = GenerateSubplansForSubqueriesAndCTEs(planId, &originalQuery,
+	List *subPlanList = GenerateSubplansForSubqueriesAndCTEs(planId, originalQuery,
 															 plannerRestrictionContext);
 
 	/*
@@ -828,6 +882,13 @@ CreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamLi
 	bool hasCtes = originalQuery->cteList != NIL;
 	if (list_length(subPlanList) > 0 || hasCtes)
 	{
+		StringInfo subPlanString = makeStringInfo();
+			pg_get_query_def(originalQuery, subPlanString);
+			ereport(DEBUG1, (errmsg(
+								 "Top query: %s",
+								 ApplyLogRedaction(subPlanString->data))));
+
+
 		Query *newQuery = copyObject(originalQuery);
 		bool setPartitionedTablesInherited = false;
 		PlannerRestrictionContext *currentPlannerRestrictionContext =
@@ -857,7 +918,7 @@ CreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, ParamLi
 		*query = *newQuery;
 
 		/* recurse into CreateDistributedPlan with subqueries/CTEs replaced */
-		distributedPlan = CreateDistributedPlan(planId, originalQuery, query, NULL, false,
+		distributedPlan = TryCreateDistributedPlan(planId, originalQuery, query, NULL, false,
 												plannerRestrictionContext);
 
 		/* distributedPlan cannot be null since hasUnresolvedParams argument was false */
