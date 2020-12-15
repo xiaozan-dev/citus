@@ -16,6 +16,7 @@
 #include "catalog/pg_type.h"
 #include "distributed/connection_management.h"
 #include "distributed/listutils.h"
+#include "distributed/maintenanced.h"
 #include "distributed/metadata_sync.h"
 #include "distributed/remote_commands.h"
 #include "postmaster/postmaster.h"
@@ -28,6 +29,8 @@
 /* declarations for dynamic loading */
 PG_FUNCTION_INFO_V1(master_metadata_snapshot);
 PG_FUNCTION_INFO_V1(wait_until_metadata_sync);
+PG_FUNCTION_INFO_V1(trigger_metadata_sync);
+PG_FUNCTION_INFO_V1(sync_metadata_to_nodes);
 
 
 /*
@@ -123,4 +126,22 @@ wait_until_metadata_sync(PG_FUNCTION_ARGS)
 	CloseConnection(connection);
 
 	PG_RETURN_VOID();
+}
+
+
+Datum
+trigger_metadata_sync(PG_FUNCTION_ARGS)
+{
+	TriggerMetadataSync(MyDatabaseId);
+	PG_RETURN_VOID();
+}
+
+
+/*
+ * sync_metadata_to_nodes calls SyncMetadataToNodes for testing purposes.
+ */
+Datum
+sync_metadata_to_nodes(PG_FUNCTION_ARGS)
+{
+	PG_RETURN_INT32(SyncMetadataToNodes());
 }
