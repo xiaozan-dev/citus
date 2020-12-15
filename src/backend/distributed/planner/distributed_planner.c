@@ -709,7 +709,7 @@ TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, Para
 
 	PG_TRY();
 	{
-		d = CreateDistributedPlan(planId, inlinedQuery, query,
+		d = CreateDistributedPlan(planId, inlinedQuery, copyC,
 								  boundParams, hasUnresolvedParams,
 								  plannerRestrictionContextC);
 	}
@@ -746,7 +746,7 @@ TryCreateDistributedPlan(uint64 planId, Query *originalQuery, Query *query, Para
 	}
 
 
-	return CreateDistributedPlan(planId, originalQuery, copyC,
+	return CreateDistributedPlan(planId, originalQuery, query,
 								 boundParams, hasUnresolvedParams,
 								 plannerRestrictionContext);
 }
