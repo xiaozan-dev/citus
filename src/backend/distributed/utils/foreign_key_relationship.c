@@ -96,7 +96,6 @@ static List * GetForeignConstraintRelationshipHelper(Oid relationId, bool isRefe
 static void SetRelationNodeListNotVisited(List *relationNodeList);
 
 
-static List * GetFkeyConnectedRelations(Oid relationId);
 static List * GetAllNeighboursList(ForeignConstraintRelationshipNode *node);
 
 
@@ -137,7 +136,7 @@ debug1_print_fkey_connected_relations(PG_FUNCTION_ARGS)
 }
 
 
-static List *
+List *
 GetFkeyConnectedRelations(Oid relationId)
 {
 	Relation relation = try_relation_open(relationId, AccessExclusiveLock);

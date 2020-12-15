@@ -24,6 +24,7 @@
 #include "distributed/commands.h"
 #include "distributed/commands/sequence.h"
 #include "distributed/commands/utility_hook.h"
+#include "distributed/foreign_key_relationship.h"
 #include "distributed/listutils.h"
 #include "distributed/metadata_sync.h"
 #include "distributed/multi_partitioning_utils.h"
@@ -38,7 +39,7 @@
 #include "utils/syscache.h"
 
 
-static void CreateCitusLocalTable(Oid relationId);
+static void CreateCitusLocalTable(Oid relationId, bool cascade);
 static void ErrorIfUnsupportedCreateCitusLocalTable(Relation relation);
 static void ErrorIfUnsupportedCitusLocalTableKind(Oid relationId);
 static List * GetShellTableDDLEventsForCitusLocalTable(Oid relationId);
@@ -54,8 +55,6 @@ static char * GetRenameShardIndexCommand(char *indexName, uint64 shardId);
 static void RenameShardRelationNonTruncateTriggers(Oid shardRelationId, uint64 shardId);
 static char * GetRenameShardTriggerCommand(Oid shardRelationId, char *triggerName,
 										   uint64 shardId);
-static void ExecuteAndLogDDLCommandList(List *ddlCommandList);
-static void ExecuteAndLogDDLCommand(const char *commandString);
 static void DropRelationTruncateTriggers(Oid relationId);
 static char * GetDropTriggerCommand(Oid relationId, char *triggerName);
 static List * GetExplicitIndexNameList(Oid relationId);
@@ -82,8 +81,9 @@ create_citus_local_table(PG_FUNCTION_ARGS)
 	CheckCitusVersion(ERROR);
 
 	Oid relationId = PG_GETARG_OID(0);
+	bool cascade = PG_GETARG_BOOL(1);
 
-	CreateCitusLocalTable(relationId);
+	CreateCitusLocalTable(relationId, cascade);
 
 	PG_RETURN_VOID();
 }
@@ -93,7 +93,7 @@ create_citus_local_table(PG_FUNCTION_ARGS)
  * CreateCitusLocalTable is the internal method that creates a citus table
  * from the table with relationId. The created table would have the following
  * properties:
- *  - it will have only one shard,
+  *  - it will have only one shard,
  *  - its distribution method will be DISTRIBUTE_BY_NONE,
  *  - its replication model will be ReplicationModel,
  *  - its replication factor will be set to 1.
@@ -101,7 +101,7 @@ create_citus_local_table(PG_FUNCTION_ARGS)
  * single placement is only allowed to be on the coordinator.
  */
 static void
-CreateCitusLocalTable(Oid relationId)
+CreateCitusLocalTable(Oid relationId, bool cascade)
 {
 	/*
 	 * These checks should be done before acquiring any locks on relation.
@@ -120,6 +120,7 @@ CreateCitusLocalTable(Oid relationId)
 	 * we open the relation with try_relation_open instead of relation_open
 	 * to give a nice error in case the table is dropped by another backend.
 	 */
+	LOCKMODE relationLockMode = AccessExclusiveLock;
 	Relation relation = try_relation_open(relationId, AccessExclusiveLock);
 
 	ErrorIfUnsupportedCreateCitusLocalTable(relation);
@@ -133,6 +134,32 @@ CreateCitusLocalTable(Oid relationId)
 	 */
 	relation_close(relation, NoLock);
 
+	/*
+	 * We do not allow creating citus local table if the table is involved in a
+	 * foreign key relationship with "any other table". Note that we allow self
+	 * references.
+	 */
+	if (TableHasExternalForeignKeys(relationId))
+	{
+		if (cascade)
+		{
+			CreateTableCascade(relationId, relationLockMode, CreateCitusLocalTable);
+
+			/*
+			 * we converted every fkey connected table in our subgraph,
+			 * including itself, so return here
+			 */
+			return;
+		}
+
+		const char *relationName = get_rel_name(relationId);
+		ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+						errmsg("relation \"%s\" is involved in a foreign key relationship "
+							   "with another table", relationName),
+						errhint("Drop foreign keys with other tables and re-define them "
+								"with ALTER TABLE commands after the current operation "
+								"is done.")));
+	}
 
 	ObjectAddress tableAddress = { 0 };
 	ObjectAddressSet(tableAddress, RelationRelationId, relationId);
@@ -218,13 +245,6 @@ ErrorIfUnsupportedCreateCitusLocalTable(Relation relation)
 	 * Hence we need to error out for shard relations too.
 	 */
 	ErrorIfRelationIsAKnownShard(relationId);
-
-	/*
-	 * We do not allow creating citus local table if the table is involved in a
-	 * foreign key relationship with "any other table". Note that we allow self
-	 * references.
-	 */
-	ErrorIfTableHasExternalForeignKeys(relationId);
 
 	/* we do not support policies in citus community */
 	ErrorIfUnsupportedPolicy(relation);
@@ -550,36 +570,6 @@ GetRenameShardTriggerCommand(Oid shardRelationId, char *triggerName, uint64 shar
 					 quotedShardTriggerName);
 
 	return renameCommand->data;
-}
-
-
-/*
- * ExecuteAndLogDDLCommandList takes a list of ddl commands and calls
- * ExecuteAndLogDDLCommand function for each of them.
- */
-static void
-ExecuteAndLogDDLCommandList(List *ddlCommandList)
-{
-	char *ddlCommand = NULL;
-	foreach_ptr(ddlCommand, ddlCommandList)
-	{
-		ExecuteAndLogDDLCommand(ddlCommand);
-	}
-}
-
-
-/*
- * ExecuteAndLogDDLCommand takes a ddl command and logs it in DEBUG4 log level.
- * Then, parses and executes it via CitusProcessUtility.
- */
-static void
-ExecuteAndLogDDLCommand(const char *commandString)
-{
-	ereport(DEBUG4, (errmsg("executing \"%s\"", commandString)));
-
-	Node *parseTree = ParseTreeNode(commandString);
-	CitusProcessUtility(parseTree, commandString, PROCESS_UTILITY_TOPLEVEL,
-						NULL, None_Receiver, NULL);
 }
 
 

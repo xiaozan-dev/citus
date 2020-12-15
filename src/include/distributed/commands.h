@@ -130,7 +130,7 @@ extern bool TableReferenced(Oid relationOid);
 extern bool TableReferencing(Oid relationOid);
 extern bool ConstraintIsAForeignKey(char *inputConstaintName, Oid relationOid);
 extern Oid GetForeignKeyOidByName(char *inputConstaintName, Oid relationId);
-extern void ErrorIfTableHasExternalForeignKeys(Oid relationId);
+extern bool TableHasExternalForeignKeys(Oid relationId);
 extern List * GetForeignKeyOids(Oid relationId, int flags);
 extern Oid GetReferencedTableId(Oid foreignKeyId);
 
@@ -332,6 +332,14 @@ extern void DropTriggerEventExtendNames(DropStmt *dropTriggerStmt, char *schemaN
 extern List * CitusLocalTableTriggerCommandDDLJob(Oid relationId, char *triggerName,
 												  const char *queryString);
 extern Oid GetTriggerFunctionId(Oid triggerId);
+
+/* create_table_utils.c */
+
+typedef void (*ConvertTableFunc)(Oid, bool);
+
+extern void CreateTableCascade(Oid relationId, LOCKMODE relLockMode, ConvertTableFunc convertTableFunc);
+extern void ExecuteAndLogDDLCommandList(List *ddlCommandList);
+extern void ExecuteAndLogDDLCommand(const char *commandString);
 
 extern bool ShouldPropagateSetCommand(VariableSetStmt *setStmt);
 extern void PostprocessVariableSetStmt(VariableSetStmt *setStmt, const char *setCommand);

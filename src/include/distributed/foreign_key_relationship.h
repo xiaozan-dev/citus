@@ -15,6 +15,7 @@
 #include "utils/hsearch.h"
 #include "nodes/primnodes.h"
 
+extern List * GetFkeyConnectedRelations(Oid relationId);
 extern List * ReferencedRelationIdList(Oid relationId);
 extern List * ReferencingRelationIdList(Oid relationId);
 extern void SetForeignConstraintRelationshipGraphInvalid(void);
